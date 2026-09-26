@@ -121,17 +121,21 @@ async function loadDashboardLowStock() {
       return;
     }
 
-    container.innerHTML = items.slice(0, 5).map(item => `
-      <div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
-        <div class="flex flex-col">
-          <span class="font-label-md text-label-md font-semibold text-on-surface">${item.name} (${item.sku})</span>
-          <span class="font-label-sm text-label-sm ${item.available <= 0 ? 'text-error' : 'text-tertiary'} font-medium">
-            Available: ${item.available} / Min: ${item.min_qty} (Cover: ${item.days_of_cover}d)
-          </span>
+    container.innerHTML = items.slice(0, 5).map(item => {
+      const coverText = (item.days_of_cover !== null && item.days_of_cover !== undefined) ? `${item.days_of_cover} days` : '—';
+
+      return `
+        <div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+          <div class="flex flex-col">
+            <span class="font-label-md text-label-md font-semibold text-on-surface">${item.name} (${item.sku})</span>
+            <span class="font-label-sm text-label-sm ${item.available <= 0 ? 'text-error' : 'text-tertiary'} font-medium">
+              Available: ${item.available} / Min: ${item.min_qty} (Cover: ${coverText})
+            </span>
+          </div>
+          <span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant text-xs font-mono font-bold">Rec: +${item.suggested_order_qty}</span>
         </div>
-        <span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant text-xs font-mono font-bold">Rec: +${item.suggested_order_qty}</span>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (e) {
     container.innerHTML = `<div class="p-4 text-center text-error font-label-sm">Error loading low stock list</div>`;
   }

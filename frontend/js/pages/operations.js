@@ -3,6 +3,21 @@
 let currentOpType = 'receipt';
 let activeOpDetail = null;
 let createLineItems = [];
+let cachedLocationsMap = null;
+
+async function getLocationsMap() {
+  if (cachedLocationsMap) return cachedLocationsMap;
+  try {
+    const locations = await window.api.get('/locations');
+    cachedLocationsMap = {};
+    (locations || []).forEach(l => {
+      cachedLocationsMap[l.id] = `${l.warehouse} / ${l.name}`;
+    });
+  } catch (e) {
+    cachedLocationsMap = {};
+  }
+  return cachedLocationsMap;
+}
 
 async function loadOperationsPage(type, params = {}) {
   currentOpType = type;
@@ -61,15 +76,28 @@ async function loadOperationDetail(id) {
   if (!container) return;
 
   try {
-    const op = await window.api.get(`/operations/${id}`);
+    const [op, locMap] = await Promise.all([
+      window.api.get(`/operations/${id}`),
+      getLocationsMap()
+    ]);
     activeOpDetail = op;
-    renderOperationDetail(op);
+    renderOperationDetail(op, locMap);
   } catch (e) {
     console.error("Error loading operation detail", e);
   }
 }
 
-function renderOperationDetail(op) {
+function resolveLocationName(locId, isSource, opType, locMap) {
+  if (!locId) {
+    if (opType === 'receipt' && isSource) return 'Vendor';
+    if (opType === 'delivery' && !isSource) return 'Customer';
+    if (opType === 'adjustment') return 'Adjustment';
+    return isSource ? 'Vendor' : 'Customer';
+  }
+  return (locMap && locMap[locId]) ? locMap[locId] : `Location #${locId}`;
+}
+
+function renderOperationDetail(op, locMap) {
   const refEl = document.getElementById('op-detail-ref');
   const typeEl = document.getElementById('op-detail-type');
   const statusBadge = document.getElementById('op-detail-status-badge');
@@ -93,10 +121,10 @@ function renderOperationDetail(op) {
   }
 
   if (metaEl) {
-    let locInfo = `Location ID: ${op.src_location_id || op.dst_location_id || 'N/A'}`;
-    if (op.src_location_id && op.dst_location_id) {
-      locInfo = `From Location ID ${op.src_location_id} → To Location ID ${op.dst_location_id}`;
-    }
+    const srcName = resolveLocationName(op.src_location_id, true, op.type, locMap);
+    const dstName = resolveLocationName(op.dst_location_id, false, op.type, locMap);
+    const locInfo = `${srcName} → ${dstName}`;
+
     metaEl.innerHTML = `
       <div><strong>Partner / Reason:</strong> ${op.partner || op.reason || 'N/A'}</div>
       <div><strong>Note:</strong> ${op.note || 'N/A'}</div>
@@ -176,7 +204,8 @@ function renderOperationDetail(op) {
 async function handleConfirmOp(id) {
   try {
     const updated = await window.api.post(`/operations/${id}/confirm`);
-    renderOperationDetail(updated);
+    const locMap = await getLocationsMap();
+    renderOperationDetail(updated, locMap);
     if (window.triggerToast) window.triggerToast("Operation Confirmed", `Status updated to ${updated.status}`);
   } catch(e){}
 }
@@ -184,7 +213,8 @@ async function handleConfirmOp(id) {
 async function handleCheckAvailabilityOp(id) {
   try {
     const updated = await window.api.post(`/operations/${id}/check-availability`);
-    renderOperationDetail(updated);
+    const locMap = await getLocationsMap();
+    renderOperationDetail(updated, locMap);
     if (window.triggerToast) window.triggerToast("Availability Checked", `Status updated to ${updated.status}`);
   } catch(e){}
 }
@@ -192,7 +222,8 @@ async function handleCheckAvailabilityOp(id) {
 async function handleValidateOp(id) {
   try {
     const updated = await window.api.post(`/operations/${id}/validate`);
-    renderOperationDetail(updated);
+    const locMap = await getLocationsMap();
+    renderOperationDetail(updated, locMap);
     if (window.triggerToast) window.triggerToast("Operation Validated", "Stock position updated in ledger.");
   } catch (err) {
     if (err.status === 409) {
@@ -205,7 +236,8 @@ async function handleValidateOp(id) {
 async function handleApproveOp(id) {
   try {
     const updated = await window.api.post(`/operations/${id}/approve`);
-    renderOperationDetail(updated);
+    const locMap = await getLocationsMap();
+    renderOperationDetail(updated, locMap);
     if (window.triggerToast) window.triggerToast("Operation Approved", "Manager approval granted.");
   } catch(e){}
 }
@@ -213,7 +245,8 @@ async function handleApproveOp(id) {
 async function handleCancelOp(id) {
   try {
     const updated = await window.api.post(`/operations/${id}/cancel`);
-    renderOperationDetail(updated);
+    const locMap = await getLocationsMap();
+    renderOperationDetail(updated, locMap);
     if (window.triggerToast) window.triggerToast("Operation Canceled", "Operation has been canceled.");
   } catch(e){}
 }
