@@ -36,6 +36,7 @@
         'views/stock_forecast_views.xml',
         'views/stock_alert_views.xml',
         'views/stock_adjustment_views.xml',
+        'views/stock_adjustment_reject_wizard_views.xml',
         'views/stock_reorder_views.xml',
         'views/stock_audit_views.xml',
         'views/stock_import_views.xml',

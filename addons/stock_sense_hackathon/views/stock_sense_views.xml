@@ -12,9 +12,9 @@
                     <group>
                         <group string="AI Configuration">
                             <field name="stock_sense_enabled" widget="boolean_toggle"/>
-                            <field name="sense_forecast_model" attrs="{'invisible': [('stock_sense_enabled','=',False)]}"/>
-                            <field name="sense_forecast_horizon" attrs="{'invisible': [('stock_sense_enabled','=',False)]}"/>
-                            <field name="sense_lead_time" attrs="{'invisible': [('stock_sense_enabled','=',False)]}"/>
+                            <field name="sense_forecast_model" invisible="not stock_sense_enabled"/>
+                            <field name="sense_forecast_horizon" invisible="not stock_sense_enabled"/>
+                            <field name="sense_lead_time" invisible="not stock_sense_enabled"/>
                         </group>
                         <group string="Thresholds">
                             <field name="sense_reorder_point"/>
@@ -26,7 +26,7 @@
                     </group>
 
                     <!-- AI Forecast Summary -->
-                    <group string="📊 Forecast Summary" attrs="{'invisible': [('stock_sense_enabled','=',False)]}">
+                    <group string="📊 Forecast Summary" invisible="not stock_sense_enabled">
                         <group>
                             <field name="sense_forecasted_demand" readonly="1"/>
                             <field name="sense_forecast_confidence" readonly="1"
@@ -56,18 +56,19 @@
                     </group>
 
                     <!-- Action Buttons -->
-                    <div class="oe_chatter" attrs="{'invisible': [('stock_sense_enabled','=',False)]}">
+                    <div class="oe_chatter" invisible="not stock_sense_enabled">
                         <div class="o_stock_sense_actions" style="display:flex; gap:8px; padding: 12px 0;">
                             <button name="action_run_forecast" type="object"
                                     string="🧠 Run AI Forecast"
                                     class="btn btn-primary"/>
                             <button name="action_smart_replenish" type="object"
                                     string="🔄 Smart Replenish"
-                                    class="btn btn-warning"/>
+                                    class="btn btn-warning"
+                                    groups="stock_sense_hackathon.group_stock_sense_manager"/>
                             <button name="action_view_alerts" type="object"
                                     string="⚠️ View Alerts"
                                     class="btn btn-danger"
-                                    attrs="{'invisible': [('active_alert_count','=',0)]}"/>
+                                    invisible="active_alert_count == 0"/>
                             <button name="action_view_sensors" type="object"
                                     string="📡 IoT Sensors"
                                     class="btn btn-secondary"/>
@@ -76,7 +77,7 @@
 
                     <!-- Forecast history -->
                     <field name="forecast_ids" readonly="1" nolabel="1">
-                        <list string="Forecast History" decoration-success="state == 'done'"
+                        <tree string="Forecast History" decoration-success="state == 'done'"
                               decoration-danger="state == 'failed'"
                               decoration-info="state == 'running'">
                             <field name="forecast_date"/>
@@ -86,7 +87,7 @@
                             <field name="confidence_score" widget="progressbar"/>
                             <field name="r2_score"/>
                             <field name="state" widget="badge"/>
-                        </list>
+                        </tree>
                     </field>
                 </page>
             </notebook>

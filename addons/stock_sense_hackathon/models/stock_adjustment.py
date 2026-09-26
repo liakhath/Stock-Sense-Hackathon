@@ -76,22 +76,22 @@ class StockSenseAdjustment(models.Model):
         return records
 
     def write(self, vals):
-        if not self.env.context.get('stock_sense_adjustment_transition'):
-            for record in self:
-                if record.state != 'draft':
-                    raise UserError(_('Only draft adjustment requests can be edited.'))
-                if record.requested_by != self.env.user and not self.env.user.has_group(
-                        'stock_sense_hackathon.group_stock_sense_manager'):
-                    raise AccessError(_('You can only edit your own adjustment requests.'))
-                if 'state' in vals:
-                    raise AccessError(_('Use the adjustment workflow actions to change state.'))
+        workflow_fields = {'state', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at'}
+        if workflow_fields.intersection(vals):
+            raise AccessError(_('Use the adjustment workflow actions to change workflow fields.'))
+        for record in self:
+            if record.state != 'draft':
+                raise UserError(_('Only draft adjustment requests can be edited.'))
+            if record.requested_by != self.env.user and not self.env.user.has_group(
+                    'stock_sense_hackathon.group_stock_sense_manager'):
+                raise AccessError(_('You can only edit your own adjustment requests.'))
         return super().write(vals)
 
     def action_submit(self):
         for record in self:
             if record.state != 'draft' or record.requested_by != self.env.user:
                 raise AccessError(_('Only the requester can submit a draft adjustment.'))
-            record.with_context(stock_sense_adjustment_transition=True).write({'state': 'pending'})
+            super(StockSenseAdjustment, record).write({'state': 'pending'})
             self.env['stock.sense.audit.log'].log(
                 'STOCK_ADJUSTMENT_SUBMITTED', record, record.current_quantity,
                 record.requested_quantity, record.reason)
@@ -118,7 +118,7 @@ class StockSenseAdjustment(models.Model):
             if difference:
                 self.env['stock.quant'].sudo()._update_available_quantity(
                     record.product_id, record.warehouse_id.lot_stock_id, difference)
-            record.with_context(stock_sense_adjustment_transition=True).write({
+            super(StockSenseAdjustment, record).write({
                 'current_quantity': actual_quantity,
                 'state': 'approved', 'approved_by': self.env.user.id,
                 'approved_at': fields.Datetime.now(),
@@ -132,23 +132,39 @@ class StockSenseAdjustment(models.Model):
                 _('Applied through approved adjustment %s.') % record.name)
         return True
 
-    def action_reject(self):
+    def action_open_reject_wizard(self):
+        self.ensure_one()
         self._check_manager_approval()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Reject Stock Adjustment'),
+            'res_model': 'stock.sense.adjustment.reject.wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref(
+                'stock_sense_hackathon.view_stock_sense_adjustment_reject_wizard_form').id,
+            'target': 'new',
+            'context': {'default_adjustment_id': self.id},
+        }
+
+    def action_reject(self, reason):
+        self._check_manager_approval()
+        reason = (reason or '').strip()
+        if not reason:
+            raise ValidationError(_('Provide a rejection reason before rejecting this request.'))
         for record in self:
-            if not record.rejection_reason:
-                raise ValidationError(_('Provide a rejection reason before rejecting this request.'))
-            record.with_context(stock_sense_adjustment_transition=True).write({
+            super(StockSenseAdjustment, record).write({
+                'rejection_reason': reason,
                 'state': 'rejected', 'rejected_by': self.env.user.id,
                 'rejected_at': fields.Datetime.now(),
             })
             self.env['stock.sense.audit.log'].log(
                 'STOCK_ADJUSTMENT_REJECTED', record, record.current_quantity,
-                record.requested_quantity, record.rejection_reason)
+                record.requested_quantity, reason)
         return True
 
     def action_cancel(self):
         for record in self:
             if record.state not in ('draft', 'pending') or record.requested_by != self.env.user:
                 raise AccessError(_('Only the requester can cancel a draft or pending request.'))
-            record.with_context(stock_sense_adjustment_transition=True).write({'state': 'cancelled'})
+            super(StockSenseAdjustment, record).write({'state': 'cancelled'})
         return True
