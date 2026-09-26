@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="module_category_stock_sense" model="ir.module.category">
+            <field name="name">Stock Sense Intelligence</field>
+            <field name="description">User roles for Stock Sense AI &amp; IoT System</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="group_stock_sense_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="category_id" ref="module_category_stock_sense"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Basic access to view Stock Sense alerts, forecasts, and IoT sensors.</field>
+        </record>
+
+        <record id="group_stock_sense_manager" model="res.groups">
+            <field name="name">Manager</field>
+            <field name="category_id" ref="module_category_stock_sense"/>
+            <field name="implied_ids" eval="[(4, ref('group_stock_sense_user'))]"/>
+            <field name="comment">Full access to manage AI forecast models, IoT sensors, and trigger replenishment.</field>
+        </record>
+    </data>
+</odoo>

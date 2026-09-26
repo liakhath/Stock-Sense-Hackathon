@@ -1,0 +1,13 @@
+/* Stock Sense Custom Styling */
+.o_stock_sense_alert_kanban .badge-danger {
+    background-color: #dc3545;
+    color: white;
+}
+.o_stock_sense_alert_kanban .badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+.o_stock_sense_alert_kanban .badge-info {
+    background-color: #17a2b8;
+    color: white;
+}

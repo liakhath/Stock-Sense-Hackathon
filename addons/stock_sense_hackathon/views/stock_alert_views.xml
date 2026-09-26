@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── Alert Kanban View ─── -->
+    <record id="view_stock_sense_alert_kanban" model="ir.ui.view">
+        <field name="name">stock.sense.alert.kanban</field>
+        <field name="model">stock.sense.alert</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state"
+                    class="o_stock_sense_alert_kanban"
+                    decoration-danger="priority == '3'"
+                    decoration-warning="priority == '2'"
+                    quick_create="false">
+                <field name="product_tmpl_id"/>
+                <field name="alert_type"/>
+                <field name="priority"/>
+                <field name="state"/>
+                <field name="current_qty"/>
+                <field name="threshold_qty"/>
+                <field name="trigger_date"/>
+                <templates>
+                    <t t-name="kanban-card">
+                        <div class="oe_kanban_card oe_kanban_global_click"
+                             t-attf-class="#{priority == '3' ? 'border-danger' : priority == '2' ? 'border-warning' : ''}">
+                            <div class="oe_kanban_details">
+                                <strong><field name="display_name"/></strong>
+                                <div class="mt-1">
+                                    <span class="badge badge-pill"
+                                          t-attf-class="#{alert_type == 'stockout' ? 'badge-danger' : alert_type == 'low_stock' ? 'badge-warning' : 'badge-info'}">
+                                        <field name="alert_type"/>
+                                    </span>
+                                </div>
+                                <div class="mt-1 text-muted small">
+                                    Current: <field name="current_qty"/> |
+                                    Threshold: <field name="threshold_qty"/>
+                                </div>
+                                <div class="text-muted small">
+                                    <field name="trigger_date"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ─── Alert List View ─── -->
+    <record id="view_stock_sense_alert_list" model="ir.ui.view">
+        <field name="name">stock.sense.alert.list</field>
+        <field name="model">stock.sense.alert</field>
+        <field name="arch" type="xml">
+            <list string="Stock Alerts"
+                  decoration-danger="priority == '3'"
+                  decoration-warning="priority == '2'"
+                  decoration-muted="state in ('resolved','dismissed')">
+                <field name="priority" widget="priority"/>
+                <field name="trigger_date"/>
+                <field name="product_tmpl_id"/>
+                <field name="alert_type" widget="badge"
+                       decoration-danger="alert_type in ('stockout','iot_anomaly')"
+                       decoration-warning="alert_type == 'low_stock'"
+                       decoration-info="alert_type in ('overstock','demand_spike')"
+                       decoration-secondary="alert_type in ('expiry','replenishment')"/>
+                <field name="current_qty"/>
+                <field name="threshold_qty"/>
+                <field name="source" widget="badge"/>
+                <field name="state" widget="badge"
+                       decoration-danger="state == 'open'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state == 'resolved'"
+                       decoration-secondary="state == 'dismissed'"/>
+                <field name="purchase_order_id" optional="show"/>
+                <button name="action_resolve" type="object" string="✅ Resolve"
+                        class="btn btn-success btn-sm"
+                        attrs="{'invisible': [('state','in',['resolved','dismissed'])]}"/>
+                <button name="action_create_po" type="object" string="🛒 Create PO"
+                        class="btn btn-warning btn-sm"
+                        attrs="{'invisible': [('alert_type','not in',['stockout','low_stock','replenishment'])]}"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ─── Alert Form View ─── -->
+    <record id="view_stock_sense_alert_form" model="ir.ui.view">
+        <field name="name">stock.sense.alert.form</field>
+        <field name="model">stock.sense.alert</field>
+        <field name="arch" type="xml">
+            <form string="Stock Alert">
+                <header>
+                    <button name="action_create_po" type="object"
+                            string="🛒 Create Purchase Order"
+                            class="btn-primary"
+                            attrs="{'invisible': [('alert_type','not in',['stockout','low_stock','replenishment'])]}"/>
+                    <button name="action_escalate" type="object"
+                            string="🚨 Escalate"
+                            attrs="{'invisible': [('state','in',['escalated','resolved','dismissed'])]}"/>
+                    <button name="action_resolve" type="object"
+                            string="✅ Mark Resolved"/>
+                    <button name="action_dismiss" type="object"
+                            string="Dismiss"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="open,in_progress,resolved"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Critical"
+                            bg_color="text-bg-danger"
+                            attrs="{'invisible': [('priority','!=','3')]}"/>
+                    <div class="oe_title">
+                        <h1><field name="display_name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Alert Details">
+                            <field name="product_tmpl_id" options="{'no_create': True}"/>
+                            <field name="location_id"/>
+                            <field name="alert_type"/>
+                            <field name="priority" widget="priority"/>
+                            <field name="source"/>
+                            <field name="iot_sensor_id"
+                                   attrs="{'invisible': [('source','!=','iot')]}"/>
+                        </group>
+                        <group string="Quantities">
+                            <field name="current_qty"/>
+                            <field name="threshold_qty"/>
+                            <field name="trigger_date"/>
+                            <field name="resolved_date" readonly="1"/>
+                            <field name="resolved_by" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="🤖 Recommended Action">
+                        <field name="recommended_action" nolabel="1" readonly="1"
+                               style="background:#f0f8ff; padding: 8px; border-radius: 6px;"/>
+                    </group>
+                    <group string="🛒 Linked Purchase Order"
+                           attrs="{'invisible': [('purchase_order_id','=',False)]}">
+                        <field name="purchase_order_id" readonly="1"/>
+                    </group>
+                    <field name="notes" placeholder="Resolution notes..."/>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ─── Alert Search View ─── -->
+    <record id="view_stock_sense_alert_search" model="ir.ui.view">
+        <field name="name">stock.sense.alert.search</field>
+        <field name="model">stock.sense.alert</field>
+        <field name="arch" type="xml">
+            <search string="Search Alerts">
+                <field name="product_tmpl_id"/>
+                <field name="alert_type"/>
+                <separator/>
+                <filter string="🔴 Open" name="open" domain="[('state','=','open')]"/>
+                <filter string="🚨 Critical" name="critical" domain="[('priority','=','3')]"/>
+                <filter string="Stockout" name="stockout" domain="[('alert_type','=','stockout')]"/>
+                <filter string="Low Stock" name="low_stock" domain="[('alert_type','=','low_stock')]"/>
+                <filter string="IoT Alerts" name="iot" domain="[('source','=','iot')]"/>
+                <separator/>
+                <filter string="Resolved" name="resolved" domain="[('state','=','resolved')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Product" name="by_product"
+                            context="{'group_by': 'product_tmpl_id'}"/>
+                    <filter string="Alert Type" name="by_type"
+                            context="{'group_by': 'alert_type'}"/>
+                    <filter string="Priority" name="by_priority"
+                            context="{'group_by': 'priority'}"/>
+                    <filter string="Status" name="by_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ─── Alert Action ─── -->
+    <record id="action_stock_sense_alert" model="ir.actions.act_window">
+        <field name="name">Stock Alerts</field>
+        <field name="res_model">stock.sense.alert</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_stock_sense_alert_search"/>
+        <field name="context">{'search_default_open': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No active alerts! 🎉
+            </p>
+            <p>All stock levels are within thresholds. Stock Sense will notify you if anything changes.</p>
+        </field>
+    </record>
+
+    <!-- ─── IoT Sensor List View ─── -->
+    <record id="view_stock_sense_iot_list" model="ir.ui.view">
+        <field name="name">stock.sense.iot.sensor.list</field>
+        <field name="model">stock.sense.iot.sensor</field>
+        <field name="arch" type="xml">
+            <list string="IoT Sensors"
+                  decoration-success="state == 'online'"
+                  decoration-danger="state == 'error'"
+                  decoration-muted="state == 'offline'">
+                <field name="name"/>
+                <field name="sensor_uid"/>
+                <field name="sensor_type" widget="badge"/>
+                <field name="product_tmpl_id"/>
+                <field name="location_id"/>
+                <field name="ip_address"/>
+                <field name="last_reading_value"/>
+                <field name="last_reading_unit"/>
+                <field name="last_reading_date"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'online'"
+                       decoration-danger="state == 'error'"
+                       decoration-warning="state == 'maintenance'"
+                       decoration-secondary="state == 'offline'"/>
+                <button name="action_poll_sensor" type="object"
+                        string="📡 Poll Now" class="btn btn-sm btn-info"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ─── IoT Sensor Form View ─── -->
+    <record id="view_stock_sense_iot_form" model="ir.ui.view">
+        <field name="name">stock.sense.iot.sensor.form</field>
+        <field name="model">stock.sense.iot.sensor</field>
+        <field name="arch" type="xml">
+            <form string="IoT Sensor">
+                <header>
+                    <button name="action_poll_sensor" type="object"
+                            string="📡 Poll Sensor Now"
+                            class="btn-primary"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="offline,online,error"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Sensor Name"/></h1>
+                        <h3><field name="sensor_uid" placeholder="Hardware UID"/></h3>
+                    </div>
+                    <group>
+                        <group string="Hardware">
+                            <field name="sensor_type"/>
+                            <field name="ip_address"/>
+                            <field name="port"/>
+                            <field name="api_endpoint" readonly="1"/>
+                            <field name="api_token" password="True"/>
+                            <field name="polling_interval"/>
+                        </group>
+                        <group string="Product &amp; Location">
+                            <field name="product_tmpl_id" options="{'no_create': True}"/>
+                            <field name="location_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="⚖️ Calibration">
+                            <field name="calibration_factor"/>
+                            <field name="tare_weight"/>
+                            <field name="unit_weight"/>
+                        </group>
+                        <group string="🚨 Thresholds">
+                            <field name="min_threshold"/>
+                            <field name="max_threshold"/>
+                            <field name="alert_on_anomaly"/>
+                        </group>
+                    </group>
+                    <group string="📊 Last Reading" readonly="1">
+                        <group>
+                            <field name="last_reading_value"/>
+                            <field name="last_reading_unit"/>
+                            <field name="last_reading_date"/>
+                            <field name="reading_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="📈 Reading History">
+                            <field name="reading_ids" readonly="1" nolabel="1">
+                                <list>
+                                    <field name="reading_date"/>
+                                    <field name="raw_value"/>
+                                    <field name="unit"/>
+                                    <field name="is_anomaly" widget="boolean"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ─── IoT Sensor Action ─── -->
+    <record id="action_stock_sense_iot_sensor" model="ir.actions.act_window">
+        <field name="name">IoT Sensors</field>
+        <field name="res_model">stock.sense.iot.sensor</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No IoT sensors registered!</p>
+            <p>Register your Raspberry Pi sensors to enable real-time stock monitoring.</p>
+        </field>
+    </record>
+
+</odoo>
