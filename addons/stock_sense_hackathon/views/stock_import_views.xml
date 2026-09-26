@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_stock_sense_import_wizard_form" model="ir.ui.view"><field name="name">stock.sense.import.wizard.form</field><field name="model">stock.sense.import.wizard</field><field name="arch" type="xml">
+        <form string="Import Inventory" create="0" edit="0"><group><field name="file" filename="filename"/><field name="filename" invisible="1"/><field name="validation_results" readonly="1" invisible="not validation_results"/></group><footer><button name="action_validate" type="object" string="Validate" class="btn-primary" invisible="state == 'validated'"/><button name="action_import" type="object" string="Import" class="btn-primary" invisible="state != 'validated'"/><button string="Cancel" class="btn-secondary" special="cancel"/></footer></form>
+    </field></record>
+    <record id="action_stock_sense_import" model="ir.actions.act_window"><field name="name">Import Inventory</field><field name="res_model">stock.sense.import.wizard</field><field name="view_mode">form</field><field name="target">new</field></record>
+</odoo>

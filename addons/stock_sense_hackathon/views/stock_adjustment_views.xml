@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_stock_sense_adjustment_list" model="ir.ui.view">
+        <field name="name">stock.sense.adjustment.list</field>
+        <field name="model">stock.sense.adjustment</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'approved'" decoration-danger="state == 'rejected'" decoration-warning="state == 'pending'">
+                <field name="name"/><field name="product_id"/><field name="warehouse_id"/>
+                <field name="current_quantity"/><field name="requested_quantity"/><field name="quantity_difference"/>
+                <field name="reason"/><field name="requested_by"/><field name="state" widget="badge"/><field name="requested_at"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_stock_sense_adjustment_form" model="ir.ui.view">
+        <field name="name">stock.sense.adjustment.form</field>
+        <field name="model">stock.sense.adjustment</field>
+        <field name="arch" type="xml">
+            <form string="Stock Adjustment Request">
+                <header>
+                    <button name="action_submit" type="object" string="Submit for Approval" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary" groups="stock_sense_hackathon.group_stock_sense_manager" invisible="state != 'pending'"/>
+                    <button name="action_reject" type="object" string="Reject" class="btn-secondary" groups="stock_sense_hackathon.group_stock_sense_manager" invisible="state != 'pending'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state not in ('draft', 'pending')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,approved,rejected,cancelled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+                    <group>
+                        <group string="Inventory">
+                            <field name="product_id" readonly="state != 'draft'"/>
+                            <field name="warehouse_id" readonly="state != 'draft'"/>
+                            <field name="current_quantity"/><field name="requested_quantity" readonly="state != 'draft'"/>
+                            <field name="quantity_difference"/>
+                        </group>
+                        <group string="Request">
+                            <field name="reason" readonly="state != 'draft'"/><field name="comment" readonly="state != 'draft'"/>
+                            <field name="requested_by"/><field name="requested_at"/>
+                            <field name="approved_by" invisible="not approved_by"/><field name="approved_at" invisible="not approved_at"/>
+                        </group>
+                    </group>
+                    <group string="Rejection" invisible="state not in ('pending', 'rejected')">
+                        <field name="rejection_reason" readonly="state == 'rejected'"/>
+                        <field name="rejected_by" invisible="not rejected_by"/><field name="rejected_at" invisible="not rejected_at"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_stock_sense_adjustment_search" model="ir.ui.view">
+        <field name="name">stock.sense.adjustment.search</field><field name="model">stock.sense.adjustment</field>
+        <field name="arch" type="xml"><search><field name="name"/><field name="product_id"/><field name="warehouse_id"/><field name="requested_by"/>
+            <filter name="pending" string="Pending Approval" domain="[('state','=','pending')]"/><filter name="my" string="My Requests" domain="[('requested_by','=',uid)]"/>
+        </search></field>
+    </record>
+    <record id="action_stock_sense_adjustment" model="ir.actions.act_window">
+        <field name="name">Stock Adjustments</field><field name="res_model">stock.sense.adjustment</field><field name="view_mode">list,form</field><field name="search_view_id" ref="view_stock_sense_adjustment_search"/>
+    </record>
+    <record id="action_stock_sense_my_adjustment" model="ir.actions.act_window">
+        <field name="name">My Adjustment Requests</field><field name="res_model">stock.sense.adjustment</field><field name="view_mode">list,form</field><field name="domain">[('requested_by', '=', uid)]</field><field name="search_view_id" ref="view_stock_sense_adjustment_search"/>
+    </record>
+    <record id="action_stock_sense_pending_adjustment" model="ir.actions.act_window">
+        <field name="name">Pending Adjustment Requests</field><field name="res_model">stock.sense.adjustment</field><field name="view_mode">list,form</field><field name="domain">[('state', '=', 'pending')]</field><field name="search_view_id" ref="view_stock_sense_adjustment_search"/>
+    </record>
+</odoo>

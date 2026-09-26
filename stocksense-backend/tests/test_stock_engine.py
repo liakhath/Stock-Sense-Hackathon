@@ -1,7 +1,9 @@
+from decimal import Decimal
+
 import pytest
 
 from app.engine import (
-    ApprovalRequired, InsufficientStock, InvalidOperation, OpStatus, StockEngine,
+    ApprovalRequired, InsufficientStock, InvalidOperation, NotFound, OpStatus, StockEngine,
 )
 
 
@@ -107,3 +109,55 @@ def test_dashboard_kpis(env):
     assert k["low_stock_items"] == 1
     assert k["pending_deliveries"] == 1
     assert k["inventory_value"] == 500
+
+def test_update_product(env):
+    eng, main, _, steel = env
+    eng.add_product("Copper", "CU-1")
+    p = eng.update_product(steel.id, name="Steel Rod", min_qty=30, reorder_qty="150.5")
+    assert p.name == "Steel Rod" and p.min_qty == 30 and p.reorder_qty == Decimal("150.5")
+    with pytest.raises(InvalidOperation):
+        eng.update_product(steel.id, sku="cu-1")        # duplicate SKU
+    with pytest.raises(InvalidOperation):
+        eng.update_product(steel.id, min_qty=-1)        # negative
+    with pytest.raises(InvalidOperation):
+        eng.update_product(steel.id, colour="red")      # unknown field
+    eng.update_product(steel.id, uom="ton")             # OK: no stock moved yet
+    eng.validate(eng.create_receipt(main.id, [(steel.id, 1)]).id)
+    with pytest.raises(InvalidOperation):
+        eng.update_product(steel.id, uom="kg")          # locked after history
+
+
+def test_archive_product(env):
+    eng, main, _, steel = env
+    eng.validate(eng.create_receipt(main.id, [(steel.id, 10)]).id)
+    with pytest.raises(InvalidOperation):
+        eng.update_product(steel.id, active=False)      # still has stock
+    eng.validate(eng.create_delivery(main.id, [(steel.id, 10)]).id)
+    eng.update_product(steel.id, active=False)
+    assert eng.search_products("steel") == []
+    assert len(eng.search_products("steel", include_archived=True)) == 1
+    with pytest.raises(InvalidOperation):
+        eng.create_receipt(main.id, [(steel.id, 1)])
+
+
+def test_search_products(env):
+    eng, main, _, steel = env
+    eng.add_product("Steel Bolt", "BLT-9", category="Hardware", min_qty=5)
+    chair = eng.add_product("Chair", "CHR-1", category="Furniture")
+    shelf = eng.add_location("Shelf 1", "WH2")
+    eng.validate(eng.create_receipt(main.id, [(steel.id, 100)]).id)
+    eng.validate(eng.create_receipt(shelf.id, [(chair.id, 3)]).id)
+
+    assert {r["name"] for r in eng.search_products("steel")} == {"Steel", "Steel Bolt"}
+    assert eng.search_products("blt-9")[0]["sku"] == "BLT-9"
+    assert [r["name"] for r in eng.search_products(category="furniture")] == ["Chair"]
+    assert [r["name"] for r in eng.search_products(warehouse="WH2")] == ["Chair"]
+    assert [r["name"] for r in eng.search_products(stock_status="out_of_stock")] == ["Steel Bolt"]
+    assert eng.list_categories() == ["Furniture", "Hardware", "Raw"]
+
+
+def test_get_product_by_sku(env):
+    eng, _, _, steel = env
+    assert eng.get_product_by_sku(" stl-001 ").id == steel.id
+    with pytest.raises(NotFound):
+        eng.get_product_by_sku("NOPE")
