@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── Product Template Form – Stock Sense Tab ─── -->
+    <record id="view_product_template_stock_sense_form" model="ir.ui.view">
+        <field name="name">product.template.stock.sense.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="🧠 Stock Sense" name="stock_sense">
+                    <group>
+                        <group string="AI Configuration">
+                            <field name="stock_sense_enabled" widget="boolean_toggle"/>
+                            <field name="sense_forecast_model" attrs="{'invisible': [('stock_sense_enabled','=',False)]}"/>
+                            <field name="sense_forecast_horizon" attrs="{'invisible': [('stock_sense_enabled','=',False)]}"/>
+                            <field name="sense_lead_time" attrs="{'invisible': [('stock_sense_enabled','=',False)]}"/>
+                        </group>
+                        <group string="Thresholds">
+                            <field name="sense_reorder_point"/>
+                            <field name="sense_safety_stock"/>
+                            <field name="alert_low_stock_threshold"/>
+                            <field name="alert_overstock_threshold"/>
+                            <field name="alert_expiry_days"/>
+                        </group>
+                    </group>
+
+                    <!-- AI Forecast Summary -->
+                    <group string="📊 Forecast Summary" attrs="{'invisible': [('stock_sense_enabled','=',False)]}">
+                        <group>
+                            <field name="sense_forecasted_demand" readonly="1"/>
+                            <field name="sense_forecast_confidence" readonly="1"
+                                   widget="progressbar" options="{'editable': False}"/>
+                            <field name="sense_last_forecast_date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="sense_avg_daily_demand" readonly="1"/>
+                            <field name="sense_recommended_qty" readonly="1"/>
+                            <field name="sense_stockout_risk" readonly="1"
+                                   widget="badge"
+                                   decoration-success="sense_stockout_risk == 'low'"
+                                   decoration-warning="sense_stockout_risk == 'medium'"
+                                   decoration-danger="sense_stockout_risk in ('high','critical')"/>
+                        </group>
+                    </group>
+
+                    <!-- IoT Status -->
+                    <group string="📡 IoT Integration">
+                        <group>
+                            <field name="iot_current_weight" readonly="1"/>
+                            <field name="iot_last_reading" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="iot_sensor_count" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Action Buttons -->
+                    <div class="oe_chatter" attrs="{'invisible': [('stock_sense_enabled','=',False)]}">
+                        <div class="o_stock_sense_actions" style="display:flex; gap:8px; padding: 12px 0;">
+                            <button name="action_run_forecast" type="object"
+                                    string="🧠 Run AI Forecast"
+                                    class="btn btn-primary"/>
+                            <button name="action_smart_replenish" type="object"
+                                    string="🔄 Smart Replenish"
+                                    class="btn btn-warning"/>
+                            <button name="action_view_alerts" type="object"
+                                    string="⚠️ View Alerts"
+                                    class="btn btn-danger"
+                                    attrs="{'invisible': [('active_alert_count','=',0)]}"/>
+                            <button name="action_view_sensors" type="object"
+                                    string="📡 IoT Sensors"
+                                    class="btn btn-secondary"/>
+                        </div>
+                    </div>
+
+                    <!-- Forecast history -->
+                    <field name="forecast_ids" readonly="1" nolabel="1">
+                        <list string="Forecast History" decoration-success="state == 'done'"
+                              decoration-danger="state == 'failed'"
+                              decoration-info="state == 'running'">
+                            <field name="forecast_date"/>
+                            <field name="algorithm"/>
+                            <field name="horizon_days"/>
+                            <field name="forecasted_qty"/>
+                            <field name="confidence_score" widget="progressbar"/>
+                            <field name="r2_score"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <!-- ─── Product List – Add Stock Sense columns ─── -->
+    <record id="view_product_template_stock_sense_list" model="ir.ui.view">
+        <field name="name">product.template.stock.sense.list</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="list_price" position="after">
+                <field name="sense_stockout_risk" optional="show" widget="badge"
+                       decoration-success="sense_stockout_risk == 'low'"
+                       decoration-warning="sense_stockout_risk == 'medium'"
+                       decoration-danger="sense_stockout_risk in ('high','critical')"/>
+                <field name="sense_forecasted_demand" optional="show"/>
+                <field name="active_alert_count" optional="show" string="⚠️ Alerts"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Top Level Menu -->
+    <menuitem id="menu_stock_sense_root"
+              name="Stock Sense"
+              sequence="25"
+              web_icon="stock_sense_hackathon,static/description/icon.png"/>
+
+    <!-- Sub-menus under Stock Sense -->
+    <menuitem id="menu_stock_sense_dashboard"
+              name="📊 Dashboard"
+              parent="menu_stock_sense_root"
+              sequence="1"/>
+
+    <menuitem id="menu_stock_sense_operations"
+              name="⚡ Operations"
+              parent="menu_stock_sense_root"
+              sequence="10"/>
+
+    <menuitem id="menu_stock_sense_ai"
+              name="🧠 AI &amp; Intelligence"
+              parent="menu_stock_sense_root"
+              sequence="20"/>
+
+    <menuitem id="menu_stock_sense_iot"
+              name="📡 IoT Monitoring"
+              parent="menu_stock_sense_root"
+              sequence="30"/>
+
+    <menuitem id="menu_stock_sense_config"
+              name="⚙️ Configuration"
+              parent="menu_stock_sense_root"
+              sequence="90"/>
+
+    <!-- Operations Menu Items -->
+    <menuitem id="menu_stock_sense_alert_action"
+              name="⚠️ Stock Alerts"
+              parent="menu_stock_sense_operations"
+              action="action_stock_sense_alert"
+              sequence="10"/>
+
+    <menuitem id="menu_stock_sense_products"
+              name="📦 Products Intelligence"
+              parent="menu_stock_sense_operations"
+              action="product.product_template_action_product"
+              sequence="20"/>
+
+    <!-- AI Menu Items -->
+    <menuitem id="menu_stock_sense_forecast_action"
+              name="📈 Demand Forecasts"
+              parent="menu_stock_sense_ai"
+              action="action_stock_sense_forecast"
+              sequence="10"/>
+
+    <!-- IoT Menu Items -->
+    <menuitem id="menu_stock_sense_iot_sensors"
+              name="📡 Registered Sensors"
+              parent="menu_stock_sense_iot"
+              action="action_stock_sense_iot_sensor"
+              sequence="10"/>
+
+</odoo>
