@@ -1517,6 +1517,73 @@
 </div>
 </div>
 </div>
+<style>
+  :root { color-scheme: dark; }
+  html, body { background: #000000 !important; color: #ffffff; }
+
+  [class~="bg-background"], [class~="bg-surface"] { background-color: #000000 !important; }
+  [class~="bg-surface-container-lowest"] { background-color: #111111 !important; }
+  [class~="bg-surface-container-lowest/90"] { background-color: rgb(17 17 17 / 90%) !important; }
+  [class~="bg-surface-container-low"] { background-color: #171717 !important; }
+  [class~="bg-surface-container-low/30"] { background-color: rgb(23 23 23 / 30%) !important; }
+  [class~="bg-surface-container-low/40"] { background-color: rgb(23 23 23 / 40%) !important; }
+  [class~="bg-surface-container-low/50"] { background-color: rgb(23 23 23 / 50%) !important; }
+  [class~="bg-surface-container-low/60"] { background-color: rgb(23 23 23 / 60%) !important; }
+  [class~="bg-surface-container-low/70"] { background-color: rgb(23 23 23 / 70%) !important; }
+  [class~="bg-surface-container"] { background-color: #202020 !important; }
+  [class~="bg-surface-container-high"] { background-color: #252525 !important; }
+  [class~="bg-surface-container-highest"] { background-color: #2a2a2a !important; }
+  [class~="bg-on-surface"] { background-color: #111111 !important; }
+  [class~="bg-on-surface/40"] { background-color: rgb(0 0 0 / 68%) !important; }
+  [class~="bg-secondary"] { background-color: #999999 !important; }
+  [class~="bg-secondary-container"] { background-color: #262626 !important; }
+  [class~="bg-secondary-container/40"] { background-color: rgb(153 153 153 / 16%) !important; }
+  [class~="bg-outline-variant"] { background-color: #2a2a2a !important; }
+  [class~="bg-error-container"] { background-color: #351717 !important; }
+  [class~="bg-error-container/20"] { background-color: rgb(186 26 26 / 20%) !important; }
+  [class~="bg-error-container/40"] { background-color: rgb(186 26 26 / 30%) !important; }
+
+  [class~="bg-primary"], [class~="bg-primary-container"],
+  [class~="bg-primary-fixed"], [class~="bg-primary-fixed-dim"] {
+    background-color: #a84691 !important;
+  }
+  [class~="bg-primary-container/20"] { background-color: rgb(168 70 145 / 20%) !important; }
+  [class~="bg-primary-container/30"] { background-color: rgb(168 70 145 / 25%) !important; }
+  [class~="bg-inverse-primary"] { background-color: #a84691 !important; }
+  [class~="bg-white"]:focus { background-color: #202020 !important; }
+
+  [class~="text-on-surface"], [class~="text-on-background"],
+  [class~="text-surface"], [class~="text-on-primary"],
+  [class~="text-on-primary-container"], [class~="text-on-primary-fixed"],
+  [class~="text-on-primary-fixed-variant"] { color: #ffffff !important; }
+  [class~="text-on-surface-variant"], [class~="text-surface-container"],
+  [class~="text-surface-container-high"], [class~="text-on-secondary-container"] {
+    color: #b0b0b0 !important;
+  }
+  [class~="text-secondary"], [class~="text-outline"] { color: #999999 !important; }
+  [class~="text-primary"], [class~="text-primary-container"],
+  [class~="text-primary-fixed-dim"], [class~="text-primary-fixed-variant"],
+  [class~="text-inverse-primary"] { color: #a84691 !important; }
+  [class~="text-error"] { color: #ff6b6b !important; }
+  [class~="text-on-error-container"] { color: #ffb3ae !important; }
+
+  [class~="border-surface-container"], [class~="border-surface-container/60"],
+  [class~="border-surface-container-high"], [class~="border-surface-container-high/60"],
+  [class~="border-surface-container-highest"], [class~="border-outline"],
+  [class~="border-outline-variant"], [class~="border-on-surface-variant"] {
+    border-color: #2a2a2a !important;
+  }
+  [class~="border-error-container/60"] { border-color: rgb(186 26 26 / 60%) !important; }
+  [class~="divide-surface-container"] > :not([hidden]) ~ :not([hidden]) {
+    border-color: #2a2a2a !important;
+  }
+  [class~="border-primary-container"] { border-color: #a84691 !important; }
+  [class~="ring-primary"], [class~="ring-primary-container"] { --tw-ring-color: #a84691 !important; }
+  [class~="focus:ring-primary-container"]:focus { --tw-ring-color: #a84691 !important; }
+  input.peer:checked ~ [class~="peer-checked:bg-primary-container"] {
+    background-color: #a84691 !important;
+  }
+</style>
 <!-- Client-side SPA Router & Interactive Logic -->
 <script>
   // Global Controller State
