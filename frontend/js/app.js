@@ -77,13 +77,14 @@ function updateHeaderUser() {
 
   const displayName = currentUser === 'manager' ? 'Marcus Vance' : 'Alex Rivers';
   const displayRole = currentUser === 'manager' ? 'Warehouse Manager' : 'Inventory Staff';
+  const badgeText = currentUser === 'manager' ? 'MGR' : 'STF';
 
   if (nameEl) nameEl.textContent = displayName;
   if (roleEl) roleEl.textContent = displayRole;
   if (profileSelector) profileSelector.value = currentUser;
 
   const currentBadge = document.getElementById('header-user-badge');
-  if (currentBadge) currentBadge.textContent = currentUser === 'manager' ? 'MGR' : 'STF';
+  if (currentBadge) currentBadge.textContent = badgeText;
 }
 
 window.updateHeaderUser = updateHeaderUser;

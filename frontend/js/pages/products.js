@@ -138,21 +138,45 @@ async function selectProductById(productId) {
 
     currentProductData = product;
 
-    // Render basic panel info
-    document.getElementById('panel-name').textContent = product.name;
-    document.getElementById('panel-sku').textContent = product.sku;
-    document.getElementById('panel-category').textContent = product.category || 'General';
-    document.getElementById('panel-onhand').textContent = stockData.on_hand;
-    document.getElementById('panel-reserved').textContent = stockData.reserved;
-    document.getElementById('panel-available').textContent = stockData.available;
-    document.getElementById('panel-uom').textContent = product.uom || 'units';
+    // Safely update basic panel info with null checks
+    const elName = document.getElementById('panel-name');
+    if (elName) elName.textContent = product.name || '';
+
+    const elSku = document.getElementById('panel-sku');
+    if (elSku) elSku.textContent = product.sku || '';
+
+    const elCat = document.getElementById('panel-category');
+    if (elCat) elCat.textContent = product.category || 'General';
+
+    const elOnHand = document.getElementById('panel-onhand');
+    if (elOnHand) elOnHand.textContent = stockData ? (stockData.on_hand ?? 0) : 0;
+
+    const elReserved = document.getElementById('panel-reserved');
+    if (elReserved) elReserved.textContent = stockData ? (stockData.reserved ?? 0) : 0;
+
+    const elAvail = document.getElementById('panel-available');
+    if (elAvail) elAvail.textContent = stockData ? (stockData.available ?? 0) : 0;
+
+    const elUom = document.getElementById('panel-uom');
+    if (elUom) elUom.textContent = product.uom || 'units';
+
+    // Compute stock status dynamically from stockData.available and product.min_qty
+    const avail = stockData && stockData.available !== undefined ? Number(stockData.available) : 0;
+    const minQ = product && product.min_qty !== undefined ? Number(product.min_qty) : 0;
+
+    let computedStatus = "in_stock";
+    if (avail <= 0) {
+      computedStatus = "out_of_stock";
+    } else if (avail <= minQ) {
+      computedStatus = "low_stock";
+    }
 
     const badge = document.getElementById('panel-badge');
     if (badge) {
-      if (product.stock_status === 'out_of_stock') {
+      if (computedStatus === 'out_of_stock') {
         badge.textContent = 'Out of Stock';
         badge.className = 'px-3 py-1 rounded-full font-label-sm text-label-sm font-semibold bg-error-container text-on-error-container';
-      } else if (product.stock_status === 'low_stock') {
+      } else if (computedStatus === 'low_stock') {
         badge.textContent = 'Low Stock';
         badge.className = 'px-3 py-1 rounded-full font-label-sm text-label-sm font-semibold bg-tertiary-container/30 text-on-tertiary-container';
       } else {
@@ -169,12 +193,12 @@ async function selectProductById(productId) {
     const inputReorderQty = document.getElementById('panel-edit-reorder-qty');
     const inputUnitCost = document.getElementById('panel-edit-unit-cost');
 
-    if (inputName) inputName.value = product.name;
-    if (inputCategory) inputCategory.value = product.category;
-    if (inputUom) inputUom.value = product.uom;
-    if (inputMinQty) inputMinQty.value = product.min_qty;
-    if (inputReorderQty) inputReorderQty.value = product.reorder_qty;
-    if (inputUnitCost) inputUnitCost.value = product.unit_cost;
+    if (inputName) inputName.value = product.name || '';
+    if (inputCategory) inputCategory.value = product.category || '';
+    if (inputUom) inputUom.value = product.uom || '';
+    if (inputMinQty) inputMinQty.value = product.min_qty ?? 0;
+    if (inputReorderQty) inputReorderQty.value = product.reorder_qty ?? 0;
+    if (inputUnitCost) inputUnitCost.value = product.unit_cost ?? 0;
 
     // Archive / Restore button
     const archiveBtn = document.getElementById('panel-btn-archive');
@@ -188,7 +212,7 @@ async function selectProductById(productId) {
     // Render stock by location table
     const locTable = document.getElementById('panel-location-stock-body');
     if (locTable) {
-      if (!stockData.by_location || stockData.by_location.length === 0) {
+      if (!stockData || !stockData.by_location || stockData.by_location.length === 0) {
         locTable.innerHTML = `<tr><td colspan="4" class="py-2 text-center text-on-surface-variant text-xs">No location stock recorded</td></tr>`;
       } else {
         locTable.innerHTML = stockData.by_location.map(loc => `

@@ -155,18 +155,18 @@
         </div>
       </div>
       <div class="flex items-center gap-3 lg:gap-4 relative shrink-0">
-        <div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl">
+        <div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-xl shrink-0">
           <span class="material-symbols-outlined text-primary text-[18px]">domain</span>
           <span class="font-label-md text-label-md font-semibold text-on-surface whitespace-nowrap">Main Warehouse</span>
         </div>
-        <div class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm whitespace-nowrap">
+        <div class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm shrink-0 whitespace-nowrap">
           <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
           <span>Live API Connected</span>
         </div>
-        <div class="h-4 w-px bg-outline-variant"></div>
+        <div class="h-4 w-px bg-outline-variant shrink-0"></div>
         
         <!-- Notification Bell -->
-        <button onclick="toggleAlertDropdown()" aria-label="Notifications" class="relative p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors">
+        <button onclick="toggleAlertDropdown()" aria-label="Notifications" class="relative p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors shrink-0">
           <span class="material-symbols-outlined text-[22px]">notifications</span>
           <span id="alert-bell-badge" class="hidden absolute -top-1 -right-1 bg-error text-on-error font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
         </button>
@@ -182,13 +182,13 @@
           </div>
         </div>
 
-        <div class="h-4 w-px bg-outline-variant"></div>
+        <div class="h-4 w-px bg-outline-variant shrink-0"></div>
         
         <!-- User Badge -->
         <div class="flex items-center gap-3 pl-1 shrink-0">
-          <div class="flex flex-col text-right">
-            <span id="header-user-name" class="font-label-md text-label-md font-semibold text-on-surface whitespace-nowrap">Marcus Vance</span>
-            <span id="header-user-role" class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">Warehouse Manager</span>
+          <div class="flex flex-col text-right whitespace-nowrap">
+            <span id="header-user-name" class="font-label-md text-label-md font-semibold text-on-surface">Marcus Vance</span>
+            <span id="header-user-role" class="font-label-sm text-label-sm text-on-surface-variant">Warehouse Manager</span>
           </div>
           <div id="header-user-badge" class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs uppercase shrink-0">
             MGR
@@ -439,7 +439,10 @@
             <div id="product-detail-panel" class="lg:col-span-4 bg-surface-container-lowest p-5 rounded-xl shadow-sm border border-surface-container flex flex-col gap-4 sticky top-24">
               <div class="flex items-center justify-between border-b border-surface-container pb-3">
                 <div class="flex flex-col">
-                  <span id="panel-category" class="text-xs uppercase font-bold text-on-surface-variant">Category</span>
+                  <div class="flex items-center gap-2">
+                    <span id="panel-category" class="text-xs uppercase font-bold text-on-surface-variant">Category</span>
+                    <span id="panel-uom" class="text-xs text-on-surface-variant font-mono">(pcs)</span>
+                  </div>
                   <h3 id="panel-name" class="font-headline-lg text-lg font-bold text-on-surface">Select a product</h3>
                   <span id="panel-sku" class="font-mono text-xs text-primary font-semibold">SKU</span>
                 </div>
@@ -472,19 +475,23 @@
               <!-- Location Stock Breakdown -->
               <div class="flex flex-col gap-2 pt-2 border-t border-surface-container">
                 <span class="text-xs font-bold uppercase text-outline">Stock by Location</span>
-                <table class="w-full text-left text-xs">
-                  <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Location</th><th class="py-1 text-right">On Hand</th><th class="py-1 text-right">Res</th><th class="py-1 text-right">Avail</th></tr></thead>
-                  <tbody id="panel-location-stock-body"><tr><td colspan="4" class="py-2 text-center text-on-surface-variant text-xs">No stock data</td></tr></tbody>
-                </table>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Location</th><th class="py-1 text-right">On Hand</th><th class="py-1 text-right">Res</th><th class="py-1 text-right">Avail</th></tr></thead>
+                    <tbody id="panel-location-stock-body"><tr><td colspan="4" class="py-2 text-center text-on-surface-variant text-xs">No stock data</td></tr></tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- Recent Ledger Moves -->
               <div class="flex flex-col gap-2 pt-2 border-t border-surface-container">
                 <span class="text-xs font-bold uppercase text-outline">Recent Moves</span>
-                <table class="w-full text-left text-xs">
-                  <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Ref</th><th class="py-1">Type</th><th class="py-1 text-right">Qty</th><th class="py-1 text-right">Time</th></tr></thead>
-                  <tbody id="panel-ledger-body"><tr><td colspan="4" class="py-2 text-center text-on-surface-variant text-xs">No move history</td></tr></tbody>
-                </table>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Ref</th><th class="py-1">Type</th><th class="py-1 text-right">Qty</th><th class="py-1 text-right">Time</th></tr></thead>
+                    <tbody id="panel-ledger-body"><tr><td colspan="4" class="py-2 text-center text-on-surface-variant text-xs">No move history</td></tr></tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -500,7 +507,7 @@
               <span class="material-symbols-outlined text-[18px]">add</span><span>New Receipt</span>
             </button>
           </div>
-          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4">
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4 overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead><tr class="border-b border-surface-container uppercase text-on-surface-variant py-2"><th class="p-3">Ref</th><th class="p-3">Line Items</th><th class="p-3">Partner / Info</th><th class="p-3">Created At</th><th class="p-3">Created By</th><th class="p-3">Status</th><th class="p-3 text-center">Action</th></tr></thead>
               <tbody id="receipts-table-body" class="divide-y divide-surface-container"><tr><td colspan="7" class="py-6 text-center text-on-surface-variant">Loading receipts...</td></tr></tbody>
@@ -515,7 +522,7 @@
               <span class="material-symbols-outlined text-[18px]">add</span><span>New Delivery</span>
             </button>
           </div>
-          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4">
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4 overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead><tr class="border-b border-surface-container uppercase text-on-surface-variant py-2"><th class="p-3">Ref</th><th class="p-3">Line Items</th><th class="p-3">Partner / Info</th><th class="p-3">Created At</th><th class="p-3">Created By</th><th class="p-3">Status</th><th class="p-3 text-center">Action</th></tr></thead>
               <tbody id="deliveries-table-body" class="divide-y divide-surface-container"><tr><td colspan="7" class="py-6 text-center text-on-surface-variant">Loading deliveries...</td></tr></tbody>
@@ -530,7 +537,7 @@
               <span class="material-symbols-outlined text-[18px]">add</span><span>New Transfer</span>
             </button>
           </div>
-          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4">
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4 overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead><tr class="border-b border-surface-container uppercase text-on-surface-variant py-2"><th class="p-3">Ref</th><th class="p-3">Line Items</th><th class="p-3">Partner / Info</th><th class="p-3">Created At</th><th class="p-3">Created By</th><th class="p-3">Status</th><th class="p-3 text-center">Action</th></tr></thead>
               <tbody id="transfers-table-body" class="divide-y divide-surface-container"><tr><td colspan="7" class="py-6 text-center text-on-surface-variant">Loading transfers...</td></tr></tbody>
@@ -545,7 +552,7 @@
               <span class="material-symbols-outlined text-[18px]">add</span><span>New Adjustment</span>
             </button>
           </div>
-          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4">
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4 overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead><tr class="border-b border-surface-container uppercase text-on-surface-variant py-2"><th class="p-3">Ref</th><th class="p-3">Line Items</th><th class="p-3">Reason / Note</th><th class="p-3">Created At</th><th class="p-3">Created By</th><th class="p-3">Status</th><th class="p-3 text-center">Action</th></tr></thead>
               <tbody id="adjustments-table-body" class="divide-y divide-surface-container"><tr><td colspan="7" class="py-6 text-center text-on-surface-variant">Loading adjustments...</td></tr></tbody>
@@ -579,10 +586,12 @@
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-8 bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-surface-container flex flex-col gap-4">
               <h3 class="font-bold text-sm text-on-surface border-b border-surface-container pb-2">Line Items</h3>
-              <table class="w-full text-left text-xs">
-                <thead><tr class="border-b text-on-surface-variant"><th class="py-2 px-4">Product Name</th><th class="py-2 px-4">SKU</th><th class="py-2 px-4 text-right">Quantity</th></tr></thead>
-                <tbody id="op-detail-lines-body" class="divide-y divide-surface-container"></tbody>
-              </table>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead><tr class="border-b text-on-surface-variant"><th class="py-2 px-4">Product Name</th><th class="py-2 px-4">SKU</th><th class="py-2 px-4 text-right">Quantity</th></tr></thead>
+                  <tbody id="op-detail-lines-body" class="divide-y divide-surface-container"></tbody>
+                </table>
+              </div>
             </div>
 
             <div class="lg:col-span-4 bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-surface-container flex flex-col gap-4">
@@ -616,7 +625,7 @@
             <input id="history-filter-user" onchange="fetchMoveHistory()" placeholder="Filter by User..." class="bg-surface-container-low text-xs p-2 rounded-lg outline-none border" />
           </div>
 
-          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4">
+          <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container p-4 overflow-x-auto">
             <table class="w-full text-left text-xs">
               <thead><tr class="border-b uppercase text-on-surface-variant py-2"><th class="p-3">Timestamp</th><th class="p-3">Op Ref</th><th class="p-3">Type</th><th class="p-3">Product</th><th class="p-3">Origin → Target</th><th class="p-3 text-right">Qty</th><th class="p-3">User</th></tr></thead>
               <tbody id="history-table-body" class="divide-y divide-surface-container"><tr><td colspan="7" class="py-6 text-center text-on-surface-variant">Loading ledger history...</td></tr></tbody>
@@ -676,11 +685,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="p-4 bg-surface-container-lowest rounded-xl border border-surface-container flex flex-col gap-2">
                 <h4 class="font-bold text-xs text-error uppercase">Errors</h4>
-                <table class="w-full text-xs text-left"><tbody id="import-errors-body"></tbody></table>
+                <div class="overflow-x-auto"><table class="w-full text-xs text-left"><tbody id="import-errors-body"></tbody></table></div>
               </div>
               <div class="p-4 bg-surface-container-lowest rounded-xl border border-surface-container flex flex-col gap-2">
                 <h4 class="font-bold text-xs text-tertiary uppercase">Warnings</h4>
-                <table class="w-full text-xs text-left"><tbody id="import-warnings-body"></tbody></table>
+                <div class="overflow-x-auto"><table class="w-full text-xs text-left"><tbody id="import-warnings-body"></tbody></table></div>
               </div>
             </div>
 
@@ -730,29 +739,35 @@
             </select>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div class="bg-surface-container-lowest p-5 rounded-xl border border-surface-container flex flex-col gap-3">
               <span class="text-xs uppercase font-bold text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">trending_up</span> Fast Movers</span>
-              <table class="w-full text-xs text-left">
-                <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Item</th><th class="py-1">Cat</th><th class="py-1 text-right">On Hand</th><th class="py-1 text-right">Shipped</th><th class="py-1 text-right">Valuation</th><th class="py-1 text-right">Cover</th></tr></thead>
-                <tbody id="reports-fast-movers-body"></tbody>
-              </table>
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left min-w-[320px]">
+                  <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Item</th><th class="py-1 text-right">On Hand</th><th class="py-1 text-right">Shipped</th><th class="py-1 text-right">Valuation</th><th class="py-1 text-right">Cover</th></tr></thead>
+                  <tbody id="reports-fast-movers-body"></tbody>
+                </table>
+              </div>
             </div>
 
             <div class="bg-surface-container-lowest p-5 rounded-xl border border-surface-container flex flex-col gap-3">
               <span class="text-xs uppercase font-bold text-tertiary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">trending_down</span> Slow Movers</span>
-              <table class="w-full text-xs text-left">
-                <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Item</th><th class="py-1">Cat</th><th class="py-1 text-right">On Hand</th><th class="py-1 text-right">Shipped</th><th class="py-1 text-right">Valuation</th><th class="py-1 text-right">Cover</th></tr></thead>
-                <tbody id="reports-slow-movers-body"></tbody>
-              </table>
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left min-w-[320px]">
+                  <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Item</th><th class="py-1 text-right">On Hand</th><th class="py-1 text-right">Shipped</th><th class="py-1 text-right">Valuation</th><th class="py-1 text-right">Cover</th></tr></thead>
+                  <tbody id="reports-slow-movers-body"></tbody>
+                </table>
+              </div>
             </div>
 
             <div class="bg-surface-container-lowest p-5 rounded-xl border border-surface-container flex flex-col gap-3">
               <span class="text-xs uppercase font-bold text-error flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">do_not_disturb</span> Dead Stock</span>
-              <table class="w-full text-xs text-left">
-                <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Item</th><th class="py-1">Cat</th><th class="py-1 text-right">On Hand</th><th class="py-1 text-right">Shipped</th><th class="py-1 text-right">Valuation</th><th class="py-1 text-right">Cover</th></tr></thead>
-                <tbody id="reports-dead-stock-body"></tbody>
-              </table>
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left min-w-[320px]">
+                  <thead><tr class="border-b text-on-surface-variant"><th class="py-1">Item</th><th class="py-1 text-right">On Hand</th><th class="py-1 text-right">Shipped</th><th class="py-1 text-right">Valuation</th><th class="py-1 text-right">Cover</th></tr></thead>
+                  <tbody id="reports-dead-stock-body"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
