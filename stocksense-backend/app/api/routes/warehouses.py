@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 
-from app.api.deps import Engine
+from app.api.deps import Engine, Manager
 from app.schemas.location import LocationCreate, LocationOut
 
 router = APIRouter(tags=["Warehouses & Locations"])
@@ -22,5 +22,6 @@ def list_locations(eng: Engine, warehouse: Optional[str] = None):
 
 
 @router.post("/locations", response_model=LocationOut, status_code=201)
-def create_location(body: LocationCreate, eng: Engine):
+def create_location(body: LocationCreate, eng: Engine, _: Manager):
+    """Managers only."""
     return eng.add_location(body.name, body.warehouse)

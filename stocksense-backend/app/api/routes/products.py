@@ -1,8 +1,8 @@
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
-from app.api.deps import CurrentUser, Engine
+from app.api.deps import CurrentAccount, CurrentUser, Engine
 from app.schemas.product import (
     LowStockItem, ProductCreate, ProductOut, ProductStockOut, ProductUpdate,
     ProductWithStock, StockStatus,
@@ -48,8 +48,11 @@ def get_product(product_id: int, eng: Engine):
 
 
 @router.patch("/{product_id}", response_model=ProductOut)
-def update_product(product_id: int, body: ProductUpdate, eng: Engine, user: CurrentUser):
-    """Send only the fields to change. `{"active": false}` archives the product."""
+def update_product(product_id: int, body: ProductUpdate, eng: Engine, user: CurrentUser,
+                   account: CurrentAccount):
+    """Send only the fields to change. `{"active": false}` archives the product (managers only)."""
+    if body.active is not None and not account.is_manager:
+        raise HTTPException(403, "Only managers can archive or restore products")
     return ProductOut.model_validate(eng.update_product(product_id, user=user, **body.changes()))
 
 

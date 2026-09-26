@@ -76,3 +76,17 @@ stock_ledger = Table(
     Column("operation_type", String(20), nullable=False),
     Column("user_name", String(120), nullable=False),
 )
+
+users = Table(
+    "users", metadata,
+    Column("id", Integer, primary_key=True, autoincrement=False),
+    Column("name", String(120), nullable=False),
+    Column("email", String(200), nullable=False, unique=True),
+    Column("role", String(20), nullable=False),
+    Column("password_hash", String(255), nullable=False),
+    Column("active", Boolean, nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("reset_code_hash", String(128), nullable=True),
+    Column("reset_expires_at", DateTime(timezone=True), nullable=True),
+    Column("reset_attempts", Integer, nullable=False, default=0),
+)

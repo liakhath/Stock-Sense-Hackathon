@@ -22,5 +22,21 @@ class Settings:
     # Supabase connection string. Empty = in-memory only (data lost on restart).
     database_url = os.getenv("DATABASE_URL", "").strip() or None
 
+    # ---- Auth ----
+    # true  = every /api route needs a login token (Authorization: Bearer ...)
+    # false = legacy dev mode: old X-User header, no role limits (use only until the frontend has login)
+    auth_required = os.getenv("AUTH_REQUIRED", "true").lower() in ("1", "true", "yes")
+    # Secret used to sign login tokens. SET THIS in .env, otherwise everyone is logged out on restart.
+    jwt_secret = os.getenv("JWT_SECRET", "").strip() or None
+    jwt_expire_minutes = int(os.getenv("JWT_EXPIRE_MINUTES", "720"))       # 12 hours
+    # true = forgot-password response includes the code (for demos without email)
+    otp_demo_mode = os.getenv("OTP_DEMO_MODE", "true").lower() in ("1", "true", "yes")
+    # Optional email delivery for reset codes (e.g. Gmail: smtp.gmail.com / 587 / app password)
+    smtp_host = os.getenv("SMTP_HOST", "").strip() or None
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER", "").strip() or None
+    smtp_password = os.getenv("SMTP_PASSWORD", "")
+    smtp_from = os.getenv("SMTP_FROM", "").strip() or None
+
 
 settings = Settings()

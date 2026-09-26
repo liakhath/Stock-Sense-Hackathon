@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Query
 
-from app.api.deps import CurrentUser, Engine
+from app.api.deps import CurrentUser, Engine, Manager
 from app.engine import StockEngine
 from app.engine.models import Operation, OpStatus, OpType
 from app.schemas.operation import (
@@ -91,7 +91,8 @@ def validate(op_id: int, eng: Engine, user: CurrentUser):
 
 
 @router.post("/{op_id}/approve", response_model=OperationOut)
-def approve(op_id: int, eng: Engine, user: CurrentUser):
+def approve(op_id: int, eng: Engine, user: CurrentUser, _: Manager):
+    """Managers only. The creator of an adjustment can't approve it."""
     return to_out(eng, eng.approve(op_id, user=user))
 
 
@@ -101,6 +102,7 @@ def cancel(op_id: int, eng: Engine, user: CurrentUser):
 
 
 @router.post("/{op_id}/reverse", response_model=OperationOut, status_code=201)
-def reverse(op_id: int, eng: Engine, user: CurrentUser, body: Optional[ReverseRequest] = None):
-    """Undo a done operation. Returns the NEW reversal operation."""
+def reverse(op_id: int, eng: Engine, user: CurrentUser, _: Manager,
+            body: Optional[ReverseRequest] = None):
+    """Managers only. Undo a done operation. Returns the NEW reversal operation."""
     return to_out(eng, eng.reverse(op_id, user=user, note=body.note if body else ""))
