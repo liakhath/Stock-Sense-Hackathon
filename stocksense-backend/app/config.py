@@ -11,7 +11,10 @@ class Settings:
     app_name = "StockSense API"
     cors_origins = [
         o.strip()
-        for o in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
+        for o in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:3000,http://localhost:5173,http://localhost:5500"
+        ).split(",")
         if o.strip()
     ]
     # Adjustments changing stock by more than this many units need a manager's approval.
