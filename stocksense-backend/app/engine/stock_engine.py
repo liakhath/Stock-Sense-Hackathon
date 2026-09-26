@@ -488,7 +488,8 @@ class StockEngine:
             parsed: list[OperationLine] = []
             seen: set[int] = set()
             for product_id, qty in lines:
-                self._product(product_id)
+                if not self._product(product_id).active:
+                    raise InvalidOperation(f"Product {product_id} is archived")
                 q = to_qty(qty)
                 if op_type is OpType.ADJUSTMENT:
                     if q < 0:
@@ -602,6 +603,20 @@ class StockEngine:
                     if o.type is OpType.RECEIPT and o.status in OPEN_STATUSES
                     for l in o.lines if l.product_id == product_id), ZERO)
 
+    def _stock_status(self, p: Product, available: Decimal) -> str:
+        if available <= 0:
+            return "out_of_stock"
+        if available <= p.min_qty:
+            return "low_stock"
+        return "in_stock"
+
+    def _has_history(self, product_id: int) -> bool:
+        return any(e.product_id == product_id for e in self.store.ledger)
+
+    def _has_open_operations(self, product_id: int) -> bool:
+        return any(o.status in OPEN_STATUSES and any(l.product_id == product_id for l in o.lines)
+                   for o in self.store.operations.values())
+
     def _product(self, product_id: int) -> Product:
         try:
             return self.store.products[product_id]
@@ -620,18 +635,3 @@ class StockEngine:
         except KeyError:
             raise NotFound(f"Operation {op_id} not found")
 
-    def _has_history(self, product_id: int) -> bool:
-        return any(e.product_id == product_id for e in self.store.ledger)
-
-    def _has_open_operations(self, product_id: int) -> bool:
-        return any(
-            o.status in OPEN_STATUSES and any(l.product_id == product_id for l in o.lines)
-            for o in self.store.operations.values()
-        )
-
-    def _stock_status(self, product: Product, available: Decimal) -> str:
-        if available <= ZERO:
-            return "out_of_stock"
-        if available <= product.min_qty:
-            return "low_stock"
-        return "in_stock"

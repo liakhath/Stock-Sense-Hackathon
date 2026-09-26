@@ -1,7 +1,9 @@
+from decimal import Decimal
+
 import pytest
 
 from app.engine import (
-    ApprovalRequired, InsufficientStock, InvalidOperation, OpStatus, StockEngine,
+    ApprovalRequired, InsufficientStock, InvalidOperation, NotFound, OpStatus, StockEngine,
 )
 
 
