@@ -79,11 +79,11 @@ function updateHeaderUser() {
   const displayRole = currentUser === 'manager' ? 'Warehouse Manager' : 'Inventory Staff';
 
   if (nameEl) nameEl.textContent = displayName;
-  if (roleEl) roleEl.textContent = `${displayRole} (${currentUser})`;
+  if (roleEl) roleEl.textContent = displayRole;
   if (profileSelector) profileSelector.value = currentUser;
 
   const currentBadge = document.getElementById('header-user-badge');
-  if (currentBadge) currentBadge.textContent = currentUser.toUpperCase();
+  if (currentBadge) currentBadge.textContent = currentUser === 'manager' ? 'MGR' : 'STF';
 }
 
 window.updateHeaderUser = updateHeaderUser;

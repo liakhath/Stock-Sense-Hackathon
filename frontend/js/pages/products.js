@@ -181,8 +181,8 @@ async function selectProductById(productId) {
     if (archiveBtn) {
       archiveBtn.textContent = product.active ? 'Archive Product' : 'Restore Product';
       archiveBtn.className = product.active 
-        ? 'w-full py-2 px-3 rounded-xl bg-error-container/30 text-on-error-container hover:bg-error-container font-label-md font-semibold transition-colors'
-        : 'w-full py-2 px-3 rounded-xl bg-primary-container/30 text-on-primary-container hover:bg-primary-container font-label-md font-semibold transition-colors';
+        ? 'flex-1 py-1.5 px-3 rounded-lg bg-error-container/30 text-error hover:bg-error-container font-bold text-xs transition-colors whitespace-nowrap text-center'
+        : 'flex-1 py-1.5 px-3 rounded-lg bg-primary-container/30 text-on-primary-container hover:bg-primary-container font-bold text-xs transition-colors whitespace-nowrap text-center';
     }
 
     // Render stock by location table
