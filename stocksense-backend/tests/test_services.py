@@ -102,6 +102,23 @@ def test_alerts_create_and_resolve():
     assert {a.kind for a in center.refresh(eng)} == {"approval_needed"}
 
 
+def test_approval_alert_resolves_after_approval():
+    eng = StockEngine(adjustment_approval_threshold=5)
+    loc = eng.add_location("Stock", "WH1")
+    p = eng.add_product("Steel", "STL-1", initial_stock=50, location_id=loc.id)
+    center = AlertCenter()
+
+    adj = eng.create_adjustment(loc.id, [(p.id, 0)], reason="lost", user="staff")
+    with pytest.raises(ApprovalRequired):
+        eng.validate(adj.id, user="staff")
+    center.refresh(eng)
+    assert [a.kind for a in center.list_alerts()] == ["approval_needed"]
+
+    eng.approve(adj.id, user="manager")
+    center.refresh(eng)
+    assert center.list_alerts() == []
+
+
 # ---------------- API ----------------
 def test_service_endpoints():
     c = TestClient(create_app(StockEngine()))
