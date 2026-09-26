@@ -50,6 +50,7 @@ class Product:
     min_qty: Decimal = Decimal("0")      # reorder point: alert at or below this
     reorder_qty: Decimal = Decimal("0")  # how much to order when low
     unit_cost: Decimal = Decimal("0")    # used for inventory value
+    active: bool = True                  # False = archived (hidden, can't be used in new operations)
 
 
 @dataclass
