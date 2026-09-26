@@ -138,18 +138,32 @@ function renderOperationDetail(op, locMap) {
   // Approval banner
   if (approvalBanner) {
     if (op.needs_approval && !op.approved_by) {
-      const isCreator = (getCurrentUser() === op.created_by);
+      const user = window.getAuthUser ? window.getAuthUser() : null;
+      const isManager = user && user.role === 'manager';
+      const isCreator = user && (user.email === op.created_by);
       approvalBanner.classList.remove('hidden');
+
+      let actionHtml = '';
+      if (!isManager) {
+        actionHtml = `<span class="text-xs font-semibold text-on-surface-variant italic">Managers only</span>`;
+      } else if (isCreator) {
+        actionHtml = `<span class="text-xs font-semibold text-error italic">Cannot approve your own operation</span>`;
+      } else {
+        actionHtml = `
+          <button class="px-4 py-2 rounded-xl bg-tertiary-container text-on-tertiary-container font-bold text-sm hover:brightness-105 shadow-sm"
+                  onclick="handleApproveOp(${op.id})">
+            Approve Operation
+          </button>
+        `;
+      }
+
       approvalBanner.innerHTML = `
         <div class="p-4 rounded-xl bg-tertiary-container/20 border border-tertiary-container flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-tertiary">gavel</span>
             <span class="font-headline-sm text-on-surface font-semibold">Awaiting Manager Approval</span>
           </div>
-          <button class="px-4 py-2 rounded-xl bg-tertiary-container text-on-tertiary-container font-bold text-sm hover:brightness-105 ${isCreator ? 'opacity-50 cursor-not-allowed' : ''}"
-                  ${isCreator ? 'disabled title="Cannot approve your own operation"' : `onclick="handleApproveOp(${op.id})"`}>
-            Approve Operation
-          </button>
+          ${actionHtml}
         </div>
       `;
     } else {
@@ -183,7 +197,11 @@ function renderOperationDetail(op, locMap) {
       btns += `<button class="px-4 py-2 bg-primary-container text-on-primary-container hover:brightness-105 rounded-xl font-bold text-sm" onclick="handleValidateOp(${op.id})">Validate</button>`;
       btns += `<button class="px-4 py-2 bg-error-container/30 text-error hover:bg-error-container rounded-xl font-bold text-sm" onclick="handleCancelOp(${op.id})">Cancel</button>`;
     } else if (op.status === 'done' && !op.reverses_id && !op.reversed_by_id) {
-      btns += `<button class="px-4 py-2 bg-secondary-container text-on-secondary-container hover:brightness-105 rounded-xl font-bold text-sm flex items-center gap-1" onclick="handleReverseOp(${op.id})"><span class="material-symbols-outlined text-[18px]">undo</span><span>Reverse Operation</span></button>`;
+      const user = window.getAuthUser ? window.getAuthUser() : null;
+      const isManager = user && user.role === 'manager';
+      if (isManager) {
+        btns += `<button class="px-4 py-2 bg-secondary-container text-on-secondary-container hover:brightness-105 rounded-xl font-bold text-sm flex items-center gap-1 shadow-sm" onclick="handleReverseOp(${op.id})"><span class="material-symbols-outlined text-[18px]">undo</span><span>Reverse Operation</span></button>`;
+      }
     }
     actionButtons.innerHTML = btns;
   }
@@ -226,10 +244,7 @@ async function handleValidateOp(id) {
     renderOperationDetail(updated, locMap);
     if (window.triggerToast) window.triggerToast("Operation Validated", "Stock position updated in ledger.");
   } catch (err) {
-    if (err.status === 409) {
-      // 409 Insufficient Stock: refresh op detail (stays in waiting)
-      loadOperationDetail(id);
-    }
+    loadOperationDetail(id);
   }
 }
 

@@ -10,19 +10,32 @@ const viewMap = {
   'transfers': 'view-transfers',
   'adjustments': 'view-adjustments',
   'move-history': 'view-move-history',
-  'warehouses': 'view-warehouses',
-  'locations': 'view-locations',
+  'warehouses': 'view-settings',
+  'locations': 'view-settings',
   'my-profile': 'view-my-profile',
   'settings': 'view-settings',
   'import': 'view-import',
   'reports': 'view-reports',
   'operation-detail': 'view-operation-detail',
-  'login': 'view-login'
+  'users': 'view-users'
 };
 
 let currentRoute = 'dashboard';
+let alertPollTimer = null;
 
 function navigateView(routeKey, params = {}) {
+  const token = window.getToken ? window.getToken() : null;
+  if (!token) {
+    if (window.showAuthScreen) window.showAuthScreen('login');
+    return;
+  }
+
+  const user = window.getAuthUser ? window.getAuthUser() : null;
+  if (routeKey === 'users' && (!user || user.role !== 'manager')) {
+    if (window.triggerToast) window.triggerToast("Access Denied", "Only managers can access user settings.");
+    routeKey = 'dashboard';
+  }
+
   const targetId = viewMap[routeKey] || 'view-dashboard';
   currentRoute = routeKey;
 
@@ -46,12 +59,15 @@ function navigateView(routeKey, params = {}) {
        (routeKey === 'products' && path === 'products-stock') || 
        (routeKey === 'transfers' && path === 'internal-transfers')) {
       link.className = "flex items-center gap-3 px-3 py-2 rounded-xl bg-primary-container text-on-primary-container font-headline-sm transition-all shadow-sm";
-    } else if (path !== 'login') {
+    } else {
       link.className = "flex items-center gap-3 px-3 py-2 rounded-xl text-on-surface-variant font-body-md text-body-md hover:bg-surface-container hover:text-on-surface transition-all";
     }
   });
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Apply role permissions to UI
+  applyRolePermissions();
 
   // Trigger page load handlers if available
   if (routeKey === 'dashboard' && window.loadDashboard) window.loadDashboard(params);
@@ -62,6 +78,7 @@ function navigateView(routeKey, params = {}) {
   if (routeKey === 'adjustments' && window.loadOperationsPage) window.loadOperationsPage('adjustment', params);
   if (routeKey === 'move-history' && window.loadMoveHistory) window.loadMoveHistory(params);
   if ((routeKey === 'warehouses' || routeKey === 'locations' || routeKey === 'settings') && window.loadSettings) window.loadSettings(params);
+  if (routeKey === 'users' && window.loadUsersPage) window.loadUsersPage();
   if (routeKey === 'import' && window.loadImportPage) window.loadImportPage(params);
   if (routeKey === 'reports' && window.loadReportsPage) window.loadReportsPage(params);
   if (routeKey === 'operation-detail' && window.loadOperationDetail) window.loadOperationDetail(params.id);
@@ -70,29 +87,81 @@ function navigateView(routeKey, params = {}) {
 
 // Header & User Profile Management
 function updateHeaderUser() {
-  const currentUser = getCurrentUser();
+  const user = window.getAuthUser ? window.getAuthUser() : null;
+  if (!user) return;
+
   const nameEl = document.getElementById('header-user-name');
   const roleEl = document.getElementById('header-user-role');
-  const profileSelector = document.getElementById('profile-user-select');
+  const badgeEl = document.getElementById('header-user-badge');
 
-  const displayName = currentUser === 'manager' ? 'Marcus Vance' : 'Alex Rivers';
-  const displayRole = currentUser === 'manager' ? 'Warehouse Manager' : 'Inventory Staff';
-  const badgeText = currentUser === 'manager' ? 'MGR' : 'STF';
+  if (nameEl) nameEl.textContent = user.name || user.email;
+  if (roleEl) roleEl.textContent = user.role === 'manager' ? 'Warehouse Manager' : 'Inventory Staff';
 
-  if (nameEl) nameEl.textContent = displayName;
-  if (roleEl) roleEl.textContent = displayRole;
-  if (profileSelector) profileSelector.value = currentUser;
-
-  const currentBadge = document.getElementById('header-user-badge');
-  if (currentBadge) currentBadge.textContent = badgeText;
+  if (badgeEl) {
+    badgeEl.textContent = user.role.toUpperCase();
+    badgeEl.className = user.role === 'manager'
+      ? "px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-bold text-xs uppercase shrink-0"
+      : "px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold text-xs uppercase shrink-0";
+  }
 }
 
-window.updateHeaderUser = updateHeaderUser;
+function applyRolePermissions() {
+  const user = window.getAuthUser ? window.getAuthUser() : null;
+  if (!user) return;
+
+  const isManager = (user.role === 'manager');
+
+  // Sidebar Users link
+  const navUsers = document.getElementById('nav-users');
+  if (navUsers) {
+    navUsers.style.display = isManager ? 'flex' : 'none';
+  }
+
+  // Settings Add Location button
+  const btnAddLoc = document.getElementById('btn-add-location');
+  if (btnAddLoc) {
+    btnAddLoc.style.display = isManager ? 'flex' : 'none';
+  }
+
+  // Import confirm button
+  const importConfirmBtn = document.getElementById('import-btn-confirm');
+  if (importConfirmBtn && !isManager) {
+    importConfirmBtn.style.display = 'none';
+  }
+
+  // Product archive button
+  const archiveBtn = document.getElementById('panel-btn-archive');
+  if (archiveBtn && !isManager) {
+    archiveBtn.style.display = 'none';
+  }
+}
+
+function loadProfilePage() {
+  const user = window.getAuthUser ? window.getAuthUser() : null;
+  if (!user) return;
+
+  const nameEl = document.getElementById('profile-display-name');
+  const emailEl = document.getElementById('profile-display-email');
+  const roleEl = document.getElementById('profile-display-role');
+  const badgeEl = document.getElementById('profile-display-badge');
+  const idEl = document.getElementById('profile-display-id');
+  const createdEl = document.getElementById('profile-display-created');
+  const initialEl = document.getElementById('profile-avatar-initial');
+
+  if (nameEl) nameEl.textContent = user.name;
+  if (emailEl) emailEl.textContent = user.email;
+  if (roleEl) roleEl.textContent = user.role === 'manager' ? 'Warehouse Manager' : 'Inventory Staff';
+  if (badgeEl) badgeEl.textContent = user.role.toUpperCase();
+  if (idEl) idEl.textContent = `#${user.id}`;
+  if (createdEl) createdEl.textContent = new Date(user.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+  if (initialEl) initialEl.textContent = (user.name || 'U').charAt(0).toUpperCase();
+}
 
 // Notification Bell & Alerts Polling
-let alertPollTimer = null;
-
 async function pollAlerts() {
+  const token = window.getToken ? window.getToken() : null;
+  if (!token) return;
+
   try {
     const data = await window.api.get('/alerts/count');
     const badge = document.getElementById('alert-bell-badge');
@@ -190,14 +259,22 @@ function setupHeaderSearch() {
           searchInput.value = '';
         }
       } catch (err) {
-        // Handle 404 / Error gracefully (already toasted by api.js)
+        // Handled gracefully
       }
     }
   });
 }
 
+function initAppAfterLogin() {
+  updateHeaderUser();
+  applyRolePermissions();
+  pollAlerts();
+  if (alertPollTimer) clearInterval(alertPollTimer);
+  alertPollTimer = setInterval(pollAlerts, 30000);
+}
+
 // Initialization on DOM Content Loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Sidebar links listener
   document.querySelectorAll('aside [data-path]').forEach(link => {
     link.addEventListener('click', (e) => {
@@ -207,22 +284,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  updateHeaderUser();
   setupHeaderSearch();
 
-  // Initial health check
-  window.api.checkHealth();
+  const token = window.getToken ? window.getToken() : null;
+  if (!token) {
+    window.showAuthScreen('login');
+    return;
+  }
 
-  // Initial alert poll and interval
-  pollAlerts();
-  if (alertPollTimer) clearInterval(alertPollTimer);
-  alertPollTimer = setInterval(pollAlerts, 30000);
-
-  // Default route
-  navigateView('dashboard');
+  // Validate existing token with /auth/me
+  try {
+    const meUser = await window.api.getMe();
+    window.setAuth(token, meUser);
+    window.showAppShell();
+    initAppAfterLogin();
+    navigateView('dashboard');
+  } catch (err) {
+    window.clearAuth();
+    window.showAuthScreen('login');
+  }
 });
 
 window.navigateView = navigateView;
+window.updateHeaderUser = updateHeaderUser;
+window.applyRolePermissions = applyRolePermissions;
+window.loadProfilePage = loadProfilePage;
+window.initAppAfterLogin = initAppAfterLogin;
 window.toggleAlertDropdown = toggleAlertDropdown;
 window.markAllAlertsRead = markAllAlertsRead;
 window.handleAlertClick = handleAlertClick;

@@ -1,18 +1,44 @@
 // StockSense API Client
 const API = "http://localhost:8000/api";
+const AUTH_KEY = "stocksense_auth";
 
-let currentUser = localStorage.getItem("stocksense_user") || "manager";
-
-function setCurrentUser(user) {
-  currentUser = user;
-  localStorage.setItem("stocksense_user", user);
-  if (window.updateHeaderUser) {
-    window.updateHeaderUser();
+function getAuth() {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
   }
 }
 
+function getToken() {
+  const auth = getAuth();
+  return auth ? auth.token : null;
+}
+
+function getAuthUser() {
+  const auth = getAuth();
+  return auth ? auth.user : null;
+}
+
 function getCurrentUser() {
-  return currentUser;
+  const user = getAuthUser();
+  return user ? user.email : "";
+}
+
+function setAuth(token, user) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ token, user }));
+  if (window.updateHeaderUser) {
+    window.updateHeaderUser();
+  }
+  if (window.applyRolePermissions) {
+    window.applyRolePermissions();
+  }
+}
+
+function clearAuth() {
+  localStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem("stocksense_user");
 }
 
 function formatMoney(amount) {
@@ -36,7 +62,11 @@ function showOfflineBanner(show) {
 async function request(endpoint, options = {}) {
   const url = endpoint.startsWith("http") ? endpoint : `${API}${endpoint}`;
   const headers = options.headers || {};
-  headers["X-User"] = currentUser;
+  
+  const token = getToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
   
   if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
@@ -61,6 +91,21 @@ async function request(endpoint, options = {}) {
     }
 
     if (!res.ok) {
+      if (res.status === 401) {
+        const isAuthPublic = endpoint.includes("/auth/login") || 
+                             endpoint.includes("/auth/signup") || 
+                             endpoint.includes("/auth/forgot-password") || 
+                             endpoint.includes("/auth/reset-password");
+        if (!isAuthPublic) {
+          clearAuth();
+          if (window.triggerToast) {
+            window.triggerToast("Session expired", "Please log in again.");
+          }
+          if (window.showAuthScreen) {
+            window.showAuthScreen("login");
+          }
+        }
+      }
       handleApiError(res.status, data);
       const err = new Error(typeof data === "object" && data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : `HTTP ${res.status}`);
       err.status = res.status;
@@ -91,7 +136,13 @@ function handleApiError(status, data) {
     });
   } else if (data && data.detail) {
     const detailMsg = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
-    window.triggerToast(`Error (${status})`, detailMsg);
+    if (status === 403) {
+      window.triggerToast("Access Denied", detailMsg);
+    } else if (status === 401) {
+      window.triggerToast("Authentication Required", detailMsg);
+    } else {
+      window.triggerToast(`Error (${status})`, detailMsg);
+    }
   } else {
     window.triggerToast("Server Error", `Request failed with status ${status}`);
   }
@@ -141,9 +192,12 @@ const api = {
   download: async (path, filename) => {
     const url = path.startsWith("http") ? path : `${API}${path}`;
     try {
-      const res = await fetch(url, {
-        headers: { "X-User": currentUser }
-      });
+      const headers = {};
+      const token = getToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      const res = await fetch(url, { headers });
       if (!res.ok) {
         let errData = {};
         try { errData = await res.json(); } catch(e){}
@@ -174,13 +228,77 @@ const api = {
       const data = await request("/health", { method: "GET" });
       if (data && data.status === "ok") {
         showOfflineBanner(false);
-        return true;
+        return data;
       }
     } catch(e) {
       showOfflineBanner(true);
     }
-    return false;
+    return null;
+  },
+
+  // Auth endpoints
+  login: (email, password) => {
+    return request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    });
+  },
+
+  signup: (name, email, password) => {
+    return request("/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password })
+    });
+  },
+
+  forgotPassword: (email) => {
+    return request("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email })
+    });
+  },
+
+  resetPassword: (email, code, new_password) => {
+    return request("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ email, code, new_password })
+    });
+  },
+
+  getMe: () => {
+    return request("/auth/me", { method: "GET" });
+  },
+
+  changePassword: (current_password, new_password) => {
+    return request("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ current_password, new_password })
+    });
+  },
+
+  getUsers: () => {
+    return request("/auth/users", { method: "GET" });
+  },
+
+  createUser: (data) => {
+    return request("/auth/users", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
+  },
+
+  updateUser: (userId, data) => {
+    return request(`/auth/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data)
+    });
   }
 };
 
 window.api = api;
+window.getAuth = getAuth;
+window.getToken = getToken;
+window.getAuthUser = getAuthUser;
+window.getCurrentUser = getCurrentUser;
+window.setAuth = setAuth;
+window.clearAuth = clearAuth;

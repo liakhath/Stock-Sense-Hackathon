@@ -93,15 +93,40 @@ function renderImportPreview(res) {
     }
   }
 
-  // Confirm button disabled if severe errors exist or no valid rows
+  // Confirm button disabled if severe errors exist or no valid rows; hidden for staff
   const confirmBtn = document.getElementById('import-btn-confirm');
   if (confirmBtn) {
-    confirmBtn.disabled = (res.created === 0 && res.updated === 0);
+    const user = window.getAuthUser ? window.getAuthUser() : null;
+    const isManager = user && user.role === 'manager';
+    if (!isManager) {
+      confirmBtn.style.display = 'none';
+      let notice = document.getElementById('import-mgr-notice');
+      if (!notice) {
+        notice = document.createElement('div');
+        notice.id = 'import-mgr-notice';
+        notice.className = 'text-xs text-on-surface-variant font-semibold italic flex items-center gap-1';
+        notice.innerHTML = '<span class="material-symbols-outlined text-[16px]">info</span> Only managers can confirm import.';
+        confirmBtn.parentNode.insertBefore(notice, confirmBtn);
+      }
+      notice.style.display = 'flex';
+    } else {
+      confirmBtn.style.display = 'inline-flex';
+      const notice = document.getElementById('import-mgr-notice');
+      if (notice) notice.style.display = 'none';
+      confirmBtn.disabled = (res.created === 0 && res.updated === 0);
+    }
   }
 }
 
 async function confirmImportFile() {
   if (!selectedImportFile) return;
+
+  const user = window.getAuthUser ? window.getAuthUser() : null;
+  if (!user || user.role !== 'manager') {
+    if (window.triggerToast) window.triggerToast("Access Denied", "Only managers can confirm import.");
+    return;
+  }
+
   const create_locations = document.getElementById('import-create-locations-toggle')?.checked ? 'true' : 'false';
 
   try {

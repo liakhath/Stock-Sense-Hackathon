@@ -19,6 +19,9 @@ async function fetchWarehousesAndLocations() {
       return;
     }
 
+    const user = window.getAuthUser ? window.getAuthUser() : null;
+    const isManager = user && user.role === 'manager';
+
     container.innerHTML = warehouses.map(wh => {
       const whLocs = (locations || []).filter(l => l.warehouse === wh);
 
@@ -34,10 +37,11 @@ async function fetchWarehousesAndLocations() {
                 <span class="font-label-sm text-label-sm text-on-surface-variant">${whLocs.length} Active Storage Locations</span>
               </div>
             </div>
-            <button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary-container font-label-md font-bold text-xs hover:brightness-105"
+            ${isManager ? `
+            <button class="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary-container font-label-md font-bold text-xs hover:brightness-105 shadow-sm"
                     onclick="openAddLocationModal('${wh}')">
               + Add Location
-            </button>
+            </button>` : ''}
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             ${whLocs.length === 0 ? `<div class="col-span-3 text-xs text-on-surface-variant py-2">No locations created yet in this warehouse</div>` : ''}
@@ -79,6 +83,12 @@ function handleAddLocationWarehouseChange() {
 }
 
 function openAddLocationModal(defaultWh = '') {
+  const user = window.getAuthUser ? window.getAuthUser() : null;
+  if (!user || user.role !== 'manager') {
+    if (window.triggerToast) window.triggerToast("Access Denied", "Only managers can provision storage locations.");
+    return;
+  }
+
   const modal = document.getElementById('add-location-modal');
   if (!modal) return;
 

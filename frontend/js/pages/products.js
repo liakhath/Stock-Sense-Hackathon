@@ -203,10 +203,17 @@ async function selectProductById(productId) {
     // Archive / Restore button
     const archiveBtn = document.getElementById('panel-btn-archive');
     if (archiveBtn) {
-      archiveBtn.textContent = product.active ? 'Archive Product' : 'Restore Product';
-      archiveBtn.className = product.active 
-        ? 'flex-1 py-1.5 px-3 rounded-lg bg-error-container/30 text-error hover:bg-error-container font-bold text-xs transition-colors whitespace-nowrap text-center'
-        : 'flex-1 py-1.5 px-3 rounded-lg bg-primary-container/30 text-on-primary-container hover:bg-primary-container font-bold text-xs transition-colors whitespace-nowrap text-center';
+      const user = window.getAuthUser ? window.getAuthUser() : null;
+      const isManager = user && user.role === 'manager';
+      if (!isManager) {
+        archiveBtn.style.display = 'none';
+      } else {
+        archiveBtn.style.display = 'block';
+        archiveBtn.textContent = product.active ? 'Archive Product' : 'Restore Product';
+        archiveBtn.className = product.active 
+          ? 'flex-1 py-1.5 px-3 rounded-lg bg-error-container/30 text-error hover:bg-error-container font-bold text-xs transition-colors whitespace-nowrap text-center'
+          : 'flex-1 py-1.5 px-3 rounded-lg bg-primary-container/30 text-on-primary-container hover:bg-primary-container font-bold text-xs transition-colors whitespace-nowrap text-center';
+      }
     }
 
     // Render stock by location table
