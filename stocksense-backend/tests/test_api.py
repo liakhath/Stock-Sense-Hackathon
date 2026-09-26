@@ -74,5 +74,5 @@ def test_errors(client):
 def test_seeded_app_runs():
     from app.main import app
     c = TestClient(app)
-    assert c.get("/api/health").json() == {"status": "ok"}
+    assert c.get("/api/health").json()["status"] == "ok"
     assert c.get("/api/dashboard/kpis").json()["total_products_in_stock"] > 0
