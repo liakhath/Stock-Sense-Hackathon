@@ -15,12 +15,12 @@ colors:
   inverse-on-surface: '#ffffff'
   outline: '#999999'
   outline-variant: '#2a2a2a'
-  surface-tint: '#a84691'
-  primary: '#a84691'
+  surface-tint: '#87366f'
+  primary: '#87366f'
   on-primary: '#ffffff'
-  primary-container: '#a84691'
+  primary-container: '#87366f'
   on-primary-container: '#ffffff'
-  inverse-primary: '#a84691'
+  inverse-primary: '#87366f'
   secondary: '#999999'
   on-secondary: '#ffffff'
   secondary-container: '#262626'
@@ -33,8 +33,8 @@ colors:
   on-error: '#ffffff'
   error-container: '#351717'
   on-error-container: '#ffb3ae'
-  primary-fixed: '#a84691'
-  primary-fixed-dim: '#a84691'
+  primary-fixed: '#87366f'
+  primary-fixed-dim: '#87366f'
   on-primary-fixed: '#ffffff'
   on-primary-fixed-variant: '#ffffff'
   secondary-fixed: '#262626'
@@ -161,7 +161,7 @@ The palette establishes a dark, low-distraction canvas calibrated for extended o
 
 ### Functional Roles
 
-- **Primary (`#A84691` - Brand Magenta):** Reserved for high-priority interactive paths, active tabs, positive highlights, and critical batch triggers. Text and icons on solid magenta are white.
+- **Primary (`#87366F` - Brand Magenta):** Reserved for high-priority interactive paths, active tabs, positive highlights, and critical batch triggers. Text and icons on solid magenta are white.
 - **Secondary (`#999999` - Neutral Gray):** Used for secondary icons, muted UI elements, and non-active controls.
 - **Tertiary (`#F59E0B` - Warm Amber):** Dedicated warning indicator for low-stock thresholds, impending reorder deadlines, and transitional synchronization states.
 - **Hazard Coral (`#EF4444`):** Strictly reserved for stockouts, negative delta trajectories, batch errors, and destructive operations.
@@ -202,7 +202,7 @@ Visual hierarchy is communicated through luminous layering and hairline structur
 - **Floor (Canvas):** Set at `#000000`, with the deepest surface receding behind data panels.
 - **Level 1 (Cards & Data Blocks):** Near-black (`#111111`) with a 1px charcoal border (`#2A2A2A`) and restrained shadow.
 - **Level 2 (Active States, Flyouts & Modals):** Dark layered surfaces from `#171717` to `#252525` with a 1px `#2A2A2A` border.
-- **Specialty Focus Surface (The Brand Highlight):** Featured KPI modules use solid `#A84691` fills with white text and icons.
+- **Specialty Focus Surface (The Brand Highlight):** Featured KPI modules use solid `#87366F` fills with white text and icons.
 
 ## Shapes
 
@@ -216,7 +216,7 @@ The geometric personality features generous, rounded radiuses inspired by modern
 ## Components
 
 ### Buttons
-- **Primary Action:** Solid `#A84691` background with `#FFFFFF` text and icons, semibold weight.
+- **Primary Action:** Solid `#87366F` background with `#FFFFFF` text and icons, semibold weight.
 - **Secondary Neutral:** Dark outlined surface, `#B0B0B0` text, and a 1px `#2A2A2A` border.
 - **Destructive Action:** Dark red-tinted surface with readable red text, retaining red for explicit errors and destructive actions.
 
@@ -228,10 +228,10 @@ The geometric personality features generous, rounded radiuses inspired by modern
 - **Positive / In Stock:** Pill radius, dark magenta-tinted background, white text, with magenta reserved for brand indicators.
 - **Low Stock Warning:** Pill radius, dark amber-tinted background, readable amber text.
 - **Stockout / Critical:** Pill radius, dark red-tinted background, readable red text.
-- **Category Filter Pills:** Interactive toggles; inactive states use dark gray surfaces with `#B0B0B0` text, while active states use `#A84691` with white text.
+- **Category Filter Pills:** Interactive toggles; inactive states use dark gray surfaces with `#B0B0B0` text, while active states use `#87366F` with white text.
 
 ### Inputs & Search Bars
-- Background set to `#171717` or `#202020`. Border is 1px `#2A2A2A`, transitioning to `#A84691` on focus with a subtle outer glow in `rgba(168, 70, 145, 0.15)`.
+- Background set to `#171717` or `#202020`. Border is 1px `#2A2A2A`, transitioning to `#87366F` on focus with a subtle outer glow in `rgba(135, 54, 111, 0.15)`.
 - Integrated search bars contain crisp, minimal monochrome line icons positioned at `16px` inner inset.
 
 ### Data Tables
