@@ -35,11 +35,11 @@
         'views/stock_sense_views.xml',
         'views/stock_forecast_views.xml',
         'views/stock_alert_views.xml',
+        'views/stock_adjustment_views.xml',
+        'views/stock_reorder_views.xml',
+        'views/stock_audit_views.xml',
+        'views/stock_import_views.xml',
         'views/menu_views.xml',
-        # Wizards
-        'wizard/stock_replenishment_views.xml',
-        # Reports
-        'reports/stock_sense_report.xml',
     ],
     'assets': {
         'web.assets_backend': [

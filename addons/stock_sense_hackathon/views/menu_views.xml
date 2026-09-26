@@ -18,6 +18,32 @@
               parent="menu_stock_sense_root"
               sequence="10"/>
 
+    <menuitem id="menu_stock_sense_adjustments"
+              name="Adjustments"
+              parent="menu_stock_sense_operations"
+              sequence="30"/>
+
+    <menuitem id="menu_stock_sense_my_adjustments"
+              name="My Requests"
+              parent="menu_stock_sense_adjustments"
+              action="action_stock_sense_my_adjustment"
+              sequence="10"
+              groups="stock_sense_hackathon.group_stock_sense_user"/>
+
+    <menuitem id="menu_stock_sense_pending_adjustments"
+              name="Pending Approval"
+              parent="menu_stock_sense_adjustments"
+              action="action_stock_sense_pending_adjustment"
+              sequence="20"
+              groups="stock_sense_hackathon.group_stock_sense_manager"/>
+
+    <menuitem id="menu_stock_sense_all_adjustments"
+              name="All Adjustments"
+              parent="menu_stock_sense_adjustments"
+              action="action_stock_sense_adjustment"
+              sequence="30"
+              groups="stock_sense_hackathon.group_stock_sense_manager"/>
+
     <menuitem id="menu_stock_sense_ai"
               name="🧠 AI &amp; Intelligence"
               parent="menu_stock_sense_root"
@@ -52,6 +78,27 @@
               parent="menu_stock_sense_ai"
               action="action_stock_sense_forecast"
               sequence="10"/>
+
+    <menuitem id="menu_stock_sense_reorder"
+              name="Reorder Suggestions"
+              parent="menu_stock_sense_ai"
+              action="action_stock_sense_reorder"
+              sequence="20"
+              groups="stock_sense_hackathon.group_stock_sense_manager"/>
+
+    <menuitem id="menu_stock_sense_audit"
+              name="Audit Trail"
+              parent="menu_stock_sense_config"
+              action="action_stock_sense_audit"
+              sequence="10"
+              groups="stock_sense_hackathon.group_stock_sense_manager"/>
+
+    <menuitem id="menu_stock_sense_import"
+              name="Import Inventory"
+              parent="menu_stock_sense_config"
+              action="action_stock_sense_import"
+              sequence="20"
+              groups="stock_sense_hackathon.group_stock_sense_manager"/>
 
     <!-- IoT Menu Items -->
     <menuitem id="menu_stock_sense_iot_sensors"
