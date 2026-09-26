@@ -50,7 +50,7 @@
         <field name="name">stock.sense.alert.list</field>
         <field name="model">stock.sense.alert</field>
         <field name="arch" type="xml">
-            <list string="Stock Alerts"
+            <tree string="Stock Alerts"
                   decoration-danger="priority == '3'"
                   decoration-warning="priority == '2'"
                   decoration-muted="state in ('resolved','dismissed')">
@@ -73,11 +73,11 @@
                 <field name="purchase_order_id" optional="show"/>
                 <button name="action_resolve" type="object" string="✅ Resolve"
                         class="btn btn-success btn-sm"
-                        attrs="{'invisible': [('state','in',['resolved','dismissed'])]}"/>
+                        invisible="state in ('resolved', 'dismissed')"/>
                 <button name="action_create_po" type="object" string="🛒 Create PO"
                         class="btn btn-warning btn-sm"
-                        attrs="{'invisible': [('alert_type','not in',['stockout','low_stock','replenishment'])]}"/>
-            </list>
+                        invisible="alert_type not in ('stockout', 'low_stock', 'replenishment')"/>
+            </tree>
         </field>
     </record>
 
@@ -91,10 +91,10 @@
                     <button name="action_create_po" type="object"
                             string="🛒 Create Purchase Order"
                             class="btn-primary"
-                            attrs="{'invisible': [('alert_type','not in',['stockout','low_stock','replenishment'])]}"/>
+                            invisible="alert_type not in ('stockout', 'low_stock', 'replenishment')"/>
                     <button name="action_escalate" type="object"
                             string="🚨 Escalate"
-                            attrs="{'invisible': [('state','in',['escalated','resolved','dismissed'])]}"/>
+                            invisible="state in ('escalated', 'resolved', 'dismissed')"/>
                     <button name="action_resolve" type="object"
                             string="✅ Mark Resolved"/>
                     <button name="action_dismiss" type="object"
@@ -105,7 +105,7 @@
                 <sheet>
                     <widget name="web_ribbon" title="Critical"
                             bg_color="text-bg-danger"
-                            attrs="{'invisible': [('priority','!=','3')]}"/>
+                            invisible="priority != '3'"/>
                     <div class="oe_title">
                         <h1><field name="display_name" readonly="1"/></h1>
                     </div>
@@ -117,7 +117,7 @@
                             <field name="priority" widget="priority"/>
                             <field name="source"/>
                             <field name="iot_sensor_id"
-                                   attrs="{'invisible': [('source','!=','iot')]}"/>
+                                   invisible="source != 'iot'"/>
                         </group>
                         <group string="Quantities">
                             <field name="current_qty"/>
@@ -132,7 +132,7 @@
                                style="background:#f0f8ff; padding: 8px; border-radius: 6px;"/>
                     </group>
                     <group string="🛒 Linked Purchase Order"
-                           attrs="{'invisible': [('purchase_order_id','=',False)]}">
+                           invisible="not purchase_order_id">
                         <field name="purchase_order_id" readonly="1"/>
                     </group>
                     <field name="notes" placeholder="Resolution notes..."/>
@@ -180,7 +180,7 @@
     <record id="action_stock_sense_alert" model="ir.actions.act_window">
         <field name="name">Stock Alerts</field>
         <field name="res_model">stock.sense.alert</field>
-        <field name="view_mode">kanban,list,form</field>
+        <field name="view_mode">kanban,tree,form</field>
         <field name="search_view_id" ref="view_stock_sense_alert_search"/>
         <field name="context">{'search_default_open': 1}</field>
         <field name="help" type="html">
@@ -196,7 +196,7 @@
         <field name="name">stock.sense.iot.sensor.list</field>
         <field name="model">stock.sense.iot.sensor</field>
         <field name="arch" type="xml">
-            <list string="IoT Sensors"
+            <tree string="IoT Sensors"
                   decoration-success="state == 'online'"
                   decoration-danger="state == 'error'"
                   decoration-muted="state == 'offline'">
@@ -216,7 +216,7 @@
                        decoration-secondary="state == 'offline'"/>
                 <button name="action_poll_sensor" type="object"
                         string="📡 Poll Now" class="btn btn-sm btn-info"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -275,13 +275,13 @@
                     <notebook>
                         <page string="📈 Reading History">
                             <field name="reading_ids" readonly="1" nolabel="1">
-                                <list>
+                                <tree>
                                     <field name="reading_date"/>
                                     <field name="raw_value"/>
                                     <field name="unit"/>
                                     <field name="is_anomaly" widget="boolean"/>
                                     <field name="note"/>
-                                </list>
+                                </tree>
                             </field>
                         </page>
                     </notebook>
@@ -298,7 +298,7 @@
     <record id="action_stock_sense_iot_sensor" model="ir.actions.act_window">
         <field name="name">IoT Sensors</field>
         <field name="res_model">stock.sense.iot.sensor</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No IoT sensors registered!</p>
             <p>Register your Raspberry Pi sensors to enable real-time stock monitoring.</p>

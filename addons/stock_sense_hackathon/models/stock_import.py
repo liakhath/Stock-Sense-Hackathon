@@ -3,6 +3,7 @@ import base64
 import csv
 import io
 import json
+import math
 
 from odoo import fields, models, _
 from odoo.exceptions import AccessError, ValidationError
@@ -22,6 +23,13 @@ class StockSenseImportWizard(models.TransientModel):
         if not self.env.user.has_group('stock_sense_hackathon.group_stock_sense_manager'):
             raise AccessError(_('Only StockSense Managers can import inventory.'))
 
+    @staticmethod
+    def _parse_non_negative_number(value):
+        number = float((value or '').strip())
+        if not math.isfinite(number) or number < 0:
+            raise ValueError
+        return number
+
     def _parse_and_validate(self):
         self.ensure_one()
         self._require_manager()
@@ -35,7 +43,7 @@ class StockSenseImportWizard(models.TransientModel):
         required = {'SKU', 'Product', 'Warehouse', 'Quantity', 'Min Stock', 'Unit Cost'}
         if not reader.fieldnames or not required.issubset(set(reader.fieldnames)):
             raise ValidationError(_('CSV must contain these columns: %s') % ', '.join(sorted(required)))
-        errors, rows, seen_skus = [], [], set()
+        errors, rows, seen_inventory_keys = [], [], set()
         for line_number, row in enumerate(reader, start=2):
             sku = (row.get('SKU') or '').strip()
             name = (row.get('Product') or '').strip()
@@ -44,30 +52,26 @@ class StockSenseImportWizard(models.TransientModel):
                 errors.append(_('Row %s: SKU is required.') % line_number)
             if not name:
                 errors.append(_('Row %s: Product is required.') % line_number)
-            if sku in seen_skus:
-                errors.append(_('Row %s: Duplicate SKU %s.') % (line_number, sku))
-            seen_skus.add(sku)
+            inventory_key = (sku, warehouse_code)
+            if inventory_key in seen_inventory_keys:
+                errors.append(_('Row %s: Duplicate SKU %s for warehouse %s.') % (
+                    line_number, sku, warehouse_code))
+            seen_inventory_keys.add(inventory_key)
             warehouse = self.env['stock.warehouse'].search(['|', ('code', '=', warehouse_code), ('name', '=', warehouse_code)], limit=1)
             if not warehouse_code or not warehouse:
                 errors.append(_('Row %s: Warehouse %s does not exist.') % (line_number, warehouse_code or _('(blank)')))
             try:
-                quantity = float((row.get('Quantity') or '').strip())
-                if quantity < 0:
-                    raise ValueError
+                quantity = self._parse_non_negative_number(row.get('Quantity'))
             except ValueError:
                 errors.append(_('Row %s: Quantity must be a non-negative number.') % line_number)
                 quantity = 0.0
             try:
-                minimum = float((row.get('Min Stock') or '').strip())
-                if minimum < 0:
-                    raise ValueError
+                minimum = self._parse_non_negative_number(row.get('Min Stock'))
             except ValueError:
                 errors.append(_('Row %s: Min Stock must be a non-negative number.') % line_number)
                 minimum = 0.0
             try:
-                unit_cost = float((row.get('Unit Cost') or '').strip())
-                if unit_cost < 0:
-                    raise ValueError
+                unit_cost = self._parse_non_negative_number(row.get('Unit Cost'))
             except ValueError:
                 errors.append(_('Row %s: Unit Cost must be a non-negative number.') % line_number)
                 unit_cost = 0.0
@@ -91,7 +95,20 @@ class StockSenseImportWizard(models.TransientModel):
             raise ValidationError(_('Validate the CSV before importing it.'))
         rows = json.loads(self.parsed_rows)
         for row in rows:
-            product = self.env['product.product'].search([('default_code', '=', row['sku'])], limit=1)
+            products = self.env['product.product'].search([
+                ('default_code', '=', row['sku']),
+                '|',
+                ('product_tmpl_id.company_id', '=', False),
+                ('product_tmpl_id.company_id', '=', self.env.company.id),
+            ])
+            if len(products) > 1:
+                raise ValidationError(_(
+                    'Multiple products with SKU %(sku)s exist for company %(company)s. '
+                    'Resolve the duplicate product codes before importing.') % {
+                        'sku': row['sku'],
+                        'company': self.env.company.display_name,
+                    })
+            product = products
             if not product:
                 product = self.env['product.product'].create({'name': row['name'], 'default_code': row['sku'], 'standard_price': row['unit_cost']})
             else:

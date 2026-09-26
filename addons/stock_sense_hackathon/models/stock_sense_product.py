@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 # pyrefly: ignore [missing-import]
-from odoo.exceptions import ValidationError
+from odoo.exceptions import AccessError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -227,15 +227,19 @@ class StockSenseProduct(models.Model):
     # ─── Actions ────────────────────────────────────────────────────────────
 
     def action_run_forecast(self):
-        """Trigger AI forecast for this product."""
+        """Open the existing forecast form for this product."""
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Run AI Forecast',
-            'res_model': 'stock.sense.forecast.wizard',
+            'name': _('Run AI Forecast'),
+            'res_model': 'stock.sense.forecast',
             'view_mode': 'form',
-            'target': 'new',
-            'context': {'default_product_tmpl_id': self.id},
+            'view_id': self.env.ref('stock_sense_hackathon.view_stock_sense_forecast_form').id,
+            'target': 'current',
+            'context': {
+                'default_product_tmpl_id': self.id,
+                'default_algorithm': self.sense_forecast_model,
+            },
         }
 
     def action_view_alerts(self):
@@ -263,18 +267,18 @@ class StockSenseProduct(models.Model):
         }
 
     def action_smart_replenish(self):
-        """Open smart replenishment wizard."""
+        """Open existing reorder suggestions for this product."""
         self.ensure_one()
+        if not self.env.user.has_group('stock_sense_hackathon.group_stock_sense_manager'):
+            raise AccessError(_('Only StockSense Managers can view smart replenishment suggestions.'))
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Smart Replenishment',
-            'res_model': 'stock.sense.replenishment.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {
-                'default_product_tmpl_id': self.id,
-                'default_recommended_qty': self.sense_recommended_qty,
-            },
+            'name': _('Smart Replenishment'),
+            'res_model': 'stock.sense.reorder.suggestion',
+            'view_mode': 'tree,form',
+            'view_id': self.env.ref('stock_sense_hackathon.view_stock_sense_reorder_list').id,
+            'domain': [('product_id.product_tmpl_id', '=', self.id)],
+            'target': 'current',
         }
 
     @api.constrains('alert_low_stock_threshold', 'alert_overstock_threshold')
