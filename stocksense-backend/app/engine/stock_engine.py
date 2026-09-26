@@ -15,6 +15,7 @@ from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
 from typing import Iterable, Optional
+from dataclasses import asdict
 
 from .errors import ApprovalRequired, InsufficientStock, InvalidOperation, NotFound
 from .models import (
@@ -32,6 +33,7 @@ REF_PREFIX = {
 }
 OPEN_STATUSES = (OpStatus.DRAFT, OpStatus.WAITING, OpStatus.READY)
 RESERVING_TYPES = (OpType.DELIVERY, OpType.INTERNAL)
+PRODUCT_FIELDS = {"name", "sku", "category", "uom", "min_qty", "reorder_qty", "unit_cost", "active"}
 
 # (product_id, from_location_id, to_location_id, qty); None = outside the company
 Move = tuple[int, Optional[int], Optional[int], Decimal]
@@ -76,7 +78,134 @@ class StockEngine:
                                          partner="Initial stock", user=user)
                 self.validate(op.id, user=user)
             return p
+                            
+    def get_product(self, product_id: int) -> Product:
+        return self._product(product_id)
 
+    def get_product_by_sku(self, sku: str) -> Product:
+        """Exact SKU lookup (case-insensitive). Used for barcode scans."""
+        term = sku.strip().lower()
+        for p in self.store.products.values():
+            if p.sku.lower() == term:
+                return p
+        raise NotFound(f"No product with SKU '{sku}'")
+
+    def update_product(self, product_id: int, user: str = "system", **changes) -> Product:
+        """Update product details and reorder rules.
+        Allowed fields: name, sku, category, uom, min_qty, reorder_qty, unit_cost, active.
+        `user` is accepted now so the API can pass it; the DB step will log it."""
+        with self._lock:
+            p = self._product(product_id)
+
+            unknown = set(changes) - PRODUCT_FIELDS
+            if unknown:
+                raise InvalidOperation(f"Can't update: {', '.join(sorted(unknown))}")
+
+            if "name" in changes:
+                changes["name"] = str(changes["name"]).strip()
+                if not changes["name"]:
+                    raise InvalidOperation("Name can't be empty")
+
+            if "sku" in changes:
+                sku = str(changes["sku"]).strip()
+                if not sku:
+                    raise InvalidOperation("SKU can't be empty")
+                if any(o.id != p.id and o.sku.lower() == sku.lower()
+                       for o in self.store.products.values()):
+                    raise InvalidOperation(f"SKU '{sku}' already exists")
+                changes["sku"] = sku
+
+            for f in ("min_qty", "reorder_qty", "unit_cost"):
+                if f in changes:
+                    changes[f] = to_qty(changes[f])
+                    if changes[f] < 0:
+                        raise InvalidOperation(f"{f} can't be negative")
+
+            if "uom" in changes and changes["uom"] != p.uom and self._has_history(p.id):
+                raise InvalidOperation("Unit of measure can't change after stock has moved")
+
+            if changes.get("active") is False and p.active:
+                if self.total_on_hand(p.id) != 0:
+                    raise InvalidOperation("Can't archive a product that still has stock")
+                if self._has_open_operations(p.id):
+                    raise InvalidOperation("Can't archive a product used in open operations")
+
+            for field_name, value in changes.items():
+                setattr(p, field_name, value)
+            return p
+
+    def search_products(self, query: Optional[str] = None, category: Optional[str] = None,
+                        warehouse: Optional[str] = None, stock_status: Optional[str] = None,
+                        include_archived: bool = False) -> list[dict]:
+        """Search by name or SKU (partial match) with filters.
+        stock_status: 'in_stock' | 'low_stock' | 'out_of_stock'.
+        An exact SKU match is always listed first."""
+        term = (query or "").strip().lower()
+        results = []
+        for p in self.store.products.values():
+            if not include_archived and not p.active:
+                continue
+            if term and term not in p.name.lower() and term not in p.sku.lower():
+                continue
+            if category and p.category.lower() != category.lower():
+                continue
+            if warehouse and not any(
+                    pid == p.id and q.on_hand > 0
+                    and self.store.locations[lid].warehouse == warehouse
+                    for (pid, lid), q in self.store.quants.items()):
+                continue
+            available = self._total(p.id, "available")
+            status = self._stock_status(p, available)
+            if stock_status and status != stock_status:
+                continue
+            results.append({
+                **asdict(p),
+                "on_hand": self._total(p.id, "on_hand"),
+                "available": available,
+                "stock_status": status,
+            })
+        results.sort(key=lambda r: (r["sku"].lower() != term, r["name"].lower()))
+        return results
+
+    def list_categories(self) -> list[str]:
+        return sorted({p.category for p in self.store.products.values() if p.active})
+
+    def list_products(self, active: Optional[bool] = True) -> list[Product]:
+        """If active is None, return all products; otherwise return active/inactive."""
+        with self._lock:
+            if active is None:
+                return list(self.store.products.values())
+            return [p for p in self.store.products.values() if p.active == active]
+
+    def archive_product(self, product_id: int) -> Product:
+        return self.update_product(product_id, active=False)
+
+    def unarchive_product(self, product_id: int) -> Product:
+        return self.update_product(product_id, active=True)
+
+    def product_is_archived(self, product_id: int) -> bool:
+        return self.store.products[product_id].active is False
+
+    def list_locations(self) -> list[Location]:
+        with self._lock:
+            return list(self.store.locations.values())
+
+    def get_location(self, location_id: int) -> Location:
+        loc = self.store.locations.get(location_id)
+        if loc is None:
+            raise NotFound(f"Location {location_id} not found")
+        return loc
+
+    def update_location(self, location_id: int, **changes: object) -> Location:
+        with self._lock:
+            loc = self.get_location(location_id)
+            for k, v in changes.items():
+                if k not in ("name", "warehouse"):
+                    raise InvalidOperation(f"Field '{k}' cannot be updated")
+                setattr(loc, k, v)
+            return loc
+
+            
     # ------------------------------------------------------------------ create operations
     def create_receipt(self, location_id: int, lines: LineInput, partner: Optional[str] = None,
                        user: str = "system", note: str = "") -> Operation:
@@ -359,7 +488,8 @@ class StockEngine:
             parsed: list[OperationLine] = []
             seen: set[int] = set()
             for product_id, qty in lines:
-                self._product(product_id)
+                if not self._product(product_id).active:
+                    raise InvalidOperation(f"Product {product_id} is archived")
                 q = to_qty(qty)
                 if op_type is OpType.ADJUSTMENT:
                     if q < 0:
@@ -473,6 +603,20 @@ class StockEngine:
                     if o.type is OpType.RECEIPT and o.status in OPEN_STATUSES
                     for l in o.lines if l.product_id == product_id), ZERO)
 
+    def _stock_status(self, p: Product, available: Decimal) -> str:
+        if available <= 0:
+            return "out_of_stock"
+        if available <= p.min_qty:
+            return "low_stock"
+        return "in_stock"
+
+    def _has_history(self, product_id: int) -> bool:
+        return any(e.product_id == product_id for e in self.store.ledger)
+
+    def _has_open_operations(self, product_id: int) -> bool:
+        return any(o.status in OPEN_STATUSES and any(l.product_id == product_id for l in o.lines)
+                   for o in self.store.operations.values())
+
     def _product(self, product_id: int) -> Product:
         try:
             return self.store.products[product_id]
@@ -490,3 +634,4 @@ class StockEngine:
             return self.store.operations[op_id]
         except KeyError:
             raise NotFound(f"Operation {op_id} not found")
+
