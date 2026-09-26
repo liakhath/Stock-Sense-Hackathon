@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_stock_sense_forecast_user,stock.sense.forecast.user,model_stock_sense_forecast,stock_sense_hackathon.group_stock_sense_user,1,1,1,0
+access_stock_sense_forecast_manager,stock.sense.forecast.manager,model_stock_sense_forecast,stock_sense_hackathon.group_stock_sense_manager,1,1,1,1
+access_stock_sense_forecast_line_user,stock.sense.forecast.line.user,model_stock_sense_forecast_line,stock_sense_hackathon.group_stock_sense_user,1,1,1,0
+access_stock_sense_forecast_line_manager,stock.sense.forecast.line.manager,model_stock_sense_forecast_line,stock_sense_hackathon.group_stock_sense_manager,1,1,1,1
+access_stock_sense_alert_user,stock.sense.alert.user,model_stock_sense_alert,stock_sense_hackathon.group_stock_sense_user,1,1,1,0
+access_stock_sense_alert_manager,stock.sense.alert.manager,model_stock_sense_alert,stock_sense_hackathon.group_stock_sense_manager,1,1,1,1
+access_stock_sense_iot_sensor_user,stock.sense.iot.sensor.user,model_stock_sense_iot_sensor,stock_sense_hackathon.group_stock_sense_user,1,1,0,0
+access_stock_sense_iot_sensor_manager,stock.sense.iot.sensor.manager,model_stock_sense_iot_sensor,stock_sense_hackathon.group_stock_sense_manager,1,1,1,1
+access_stock_sense_iot_reading_user,stock.sense.iot.reading.user,model_stock_sense_iot_reading,stock_sense_hackathon.group_stock_sense_user,1,1,1,0
+access_stock_sense_iot_reading_manager,stock.sense.iot.reading.manager,model_stock_sense_iot_reading,stock_sense_hackathon.group_stock_sense_manager,1,1,1,1
